@@ -12,7 +12,7 @@ For now, these are the resources I'm following:
 
 # Day 1
 
-**What is a server?**
+### Server
 
 Server is a software or hardware device that accepts and responds made over a network. The device that makes the request, and receives a response from the server, is called a client.
 
