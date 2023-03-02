@@ -102,6 +102,7 @@ let path = './pages/index.html'
  ```
 
 ![index-page](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Day02_dumps/Capture1.PNG)
+
 we can replace `res.write(fileData)` and `res.end()` with just `res.end(fileData)` if we only have to write one response.
 
 So alternatively the above can be shortened as:
