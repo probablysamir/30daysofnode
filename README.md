@@ -138,3 +138,80 @@ To serve a JSON file we can do:
 
   The audio file after served looks like this. Note that you should not use `res.end` when your'e using readable stream.
 
+# Day 3
+## Status Codes
+
+Whenever a server gets a request and sends back the response, it sends back a status code to inform if the HTTP request was successfully completed.
+
+The status code responses are grouped into five groups:
+
+- Informational responses (`100`-`199`)
+- Successful responses (`200`-`299`)
+- Redirection responses (`300`-`399`)
+- Client error responses (`400`-`499`)
+- Server error responses (`500`-`599`)
+
+The most commonly used status codes are:
+- `200 OK` - The Request succeeded
+
+- `301 Moved Permanently` - The URL of the requested resource has been changed permanently. The new URL is given in the response.
+
+- `307 Temporary Redirect` - The server sends this response to direct the client to get the requested resource at another URI with the same method that was used in the prior request
+
+- `304 Permanent Redirect` - This means that the resource is now permanently located at another URI, specified by the `Location:` HTTP Response header.
+
+- `400 Bad Request` - The server cannot or will not process the request due to something that is perceived to be a client error (e.g., malformed request syntax, invalid request message framing, or deceptive request routing).
+
+- `401 Unauthorized` - The client must authenticate itself to get the requested response.
+
+- `403 Forbidden` - The client does not have access rights to the content; that is, it is unauthorized, so the server is refusing to give the requested resource. Unlike `401 Unauthorized`, the client's identity is known to the server.
+
+- `404 Not Found` - The server cannot find the requested resource. Most likely, the user has entered an incorrect URL.
+
+- `500 Internal Server Error` - The server has encountered a situation it does not know how to handle.
+
+- `502 Bad Gateway` - This error response means that the server, while working as a gateway to get a response needed to handle the request, got an invalid response.
+
+- `503 Service Unavailable` - This error response means that the server, while working as a gateway to get a response needed to handle the request, got an invalid response.
+
+We can send back a status code with a response by simply assigning value to  `res.statusCode` 
+
+You can know more about status codes by checking mdn docs or by simply clicking [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
+
+## Creating different paths for different pages
+
+We can create different paths for different pages by using conditional statement ( switch-case here ).
+```
+let path = "./pages";
+switch (req.url) {
+  case "/":
+    path += "/index.html";
+    res.statusCode = 200;
+    break;
+  case "/about-us":
+    path += "/about.html";
+    res.statusCode = 200;
+    break;
+  default:
+    path += "/404.html";
+    res.statusCode = 404;
+}
+```
+Note that we also implemented the status code here. Since `.pages/index.html` and `.pages/about.html` are valid paths so we set it's status code to `200` which means that the request succeeded but if the entered url is something else then we send back the `404.html` that says the URL is incorrect and we set it's status code to `404`.
+
+Sometimes we need to change the url of a page and to ensure that the client doesn't get a `404 error` when they enter the old URL, we create redirects. In the above scenario let us suppose that `localhost:3000/about-us` is changed to `localhost:3000/about` we then create the redirection by changing the initial case and adding another one. Let us first change the initial case to:
+```
+case "/about":
+      path += "/about.html";
+      res.statusCode = 200;
+      break;
+```
+we then add the case for the old URL:
+```
+case "/about-me":
+  res.statusCode = 301;
+  res.setHeader("Location", "/about");
+  res.end();
+```
+We set the respose header `Location:` to the new location i.e. `/about` and then send a status code of `301 Moved Permanently` to inform that the URL of the requested resource has been changed permanently and he new URL is given in the response. 
+
