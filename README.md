@@ -11,6 +11,10 @@ For now, these are the resources I'm following:
 - [Roadmap](https://roadmap.sh/backend)
 - [Youtube Playlist](https://www.youtube.com/watch?v=yo8xV6izqIk&list=PLd7dW_Jxkr_ZSPvEj297MGOU42KSRvml_)
 
+You can manually scroll to check my progress or click these links directly to navigate:
+
+- [Day 1](#Day-1)
+
 # Day 1
 
 ### Server
