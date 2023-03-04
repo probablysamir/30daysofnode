@@ -14,6 +14,9 @@ For now, these are the resources I'm following:
 You can manually scroll to check my progress or click these links directly to navigate:
 
 - [Day 1](#Day-1)
+- [Day 2](#Day-2)
+- [Day 3](#Day-3)
+- [Day 4](#Day-4)
 
 # Day 1
 
