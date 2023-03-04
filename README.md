@@ -9,6 +9,7 @@ I'll be posting more and more resources I encounter in my journey.
 For now, these are the resources I'm following:
 
 - [Roadmap](https://roadmap.sh/backend)
+- [Youtube Playlist](https://www.youtube.com/watch?v=yo8xV6izqIk&list=PLd7dW_Jxkr_ZSPvEj297MGOU42KSRvml_)
 
 # Day 1
 
