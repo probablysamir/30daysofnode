@@ -215,3 +215,104 @@ case "/about-me":
 ```
 We set the respose header `Location:` to the new location i.e. `/about` and then send a status code of `301 Moved Permanently` to inform that the URL of the requested resource has been changed permanently and he new URL is given in the response. 
 
+# Day 4
+
+## The Node Architecture
+
+Node.JS runtime has several dependencies but the most important ones are Javscript V8 engine and libuv. It also has other dependecies like http-parser, c-ares, openSSL, zlib but V8 engine and libuv are the core dependencies of Node.JS.
+
+![Node Architecture](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/NodeJsArchitecture.png)
+
+V8 engine helps to write javascript code in Node.
+
+libuv gives node access to the underlying computer operating system, file system, networking and more. It also implements two of the most important features of Node.JS:
+- Event Loop
+- Thread Pool
+
+Node.JS is single threaded by nature. This means that our code will be executed in the same thread. Which means if we have some synchronous ( blocking code ) intensive task in the thread, then the thread will be unavailable for the rest of the code until it is completed which makes it a huge problem when there are multiple users requesting access to the thread. 
+
+Node.JS, however, has solved this problem with the help of thread pool. Whenever there is an intensive task that is to be performed, it is offloaded to the thread pool for processing and thus doesn't block the operations of the main thread.
+
+![Thread Pool](https://devopedia.org/images/article/131/2362.1540794088.jpg)
+
+### Event Loop
+The event loop is what allows Node.js to perform non-blocking I/O operations — despite the fact that JavaScript is single-threaded — by offloading operations to the system kernel whenever possible.
+
+![Event Loop](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture1.PNG)
+
+Event loop processes the phases in the above order.
+
+The phases are briefly discussed here:
+
+- __timers :__ this phase executes callbacks scheduled by `setTimeout()` and `setInterval()`
+
+- __pending callbacks :__ executes I/O callbacks deferred to the next loop iteration.
+
+- __idle, prepare :__ only used internally.
+
+- __poll :__  retrieve new I/O events; execute I/O related callbacks (almost all with the exception of close callbacks, the ones scheduled by timers, and `setImmediate()`); node will block here when appropriate.
+
+- __check :__  `setImmediate()` callbacks are invoked here.
+
+- __close callbacks :__ some close callbacks, e.g. `socket.on('close', ...)`.
+
+To know about the event loop in detail you can visit the Node.js documentation or simply click [here](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/).
+
+### Thread Pool:
+
+A thread pool in Node.js is a mechanism that allows multiple tasks to be executed concurrently in separate threads, without blocking the main thread. When Node.js receives a request that requires an intensive operation, such as reading or writing to a file, it can offload that task to a worker thread in the thread pool. The worker thread performs the task in the background while the main thread continues to handle other requests.
+
+The size of the thread pool is configurable in Node.js, and it can be adjusted based on the workload and the number of available processors on the system. By default, the thread pool size in Node.js is equal to the number of available CPUs on the system.
+
+Using a thread pool in Node.js can significantly improve the performance and scalability of the application, especially when dealing with I/O-bound operations. It enables Node.js to handle multiple requests concurrently, without causing the main thread to block, resulting in a more responsive and efficient application.
+
+Some of the intensive tasks that are offloaded to the thread pool are:
+- File System APIs
+- Cryptography
+- Compression
+- DNS Lookups
+
+## Event Driven Architecture
+
+Event-driven architecture is a programming paradigm in which software systems respond to events by triggering appropriate actions. In Node.js, event-driven architecture is achieved through the use of the Event Loop and the EventEmitter module.
+
+In Event driven architecture, there are event emitters, event listeners and event handlers. Event emitter is responsible for emitting events that occur within the application or system. Other parts of the application can register themselves as listeners for specific events emitted by the event emitter and handle the event.
+
+![Event Driven Architecture](https://i0.wp.com/www.tutorialspoint.com/nodejs/images/event_loop.jpg)
+
+Let us create an event emitter, event listener, and an event listener to see event driven architecture in action.
+
+Firstly, let's import the events module as EventEmitter.
+```
+const EventEmitter = require("events");
+```
+Now we will create a class `MyEmitter` that inherits the properties of `EventEmitter`
+```
+class MyEmitter extends EventEmitter {
+  constructor() {
+    super();
+  }
+}
+```
+We will now create an object of the class `MyEmitter`.
+```
+const myEmitter = new MyEmitter();
+```
+To set an event listener and event handler:
+```
+myEmitter.on("requestfile", () => {
+  console.log("A file has been requested");
+});
+```
+Here, we create an event listener for the named event `requestfile`. The attached callback function is the event handler of the event.
+
+We then create an event emitter to invoke the event listeners and event handlers.
+```
+myEmitter.emit("requestfile");
+```
+Now, whenever this line of code is run i.e event is emitted, the event listeners will register the event and fire up the callback function which is the event handler of the event.
+
+
+In a nutshell, an event emitter emits events, an event listeners listen to that event and the event handlers perform specific actions assigned to them when the event listeners register an event.
+
+
