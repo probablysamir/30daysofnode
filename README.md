@@ -17,6 +17,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 2](#Day-2)
 - [Day 3](#Day-3)
 - [Day 4](#Day-4)
+- [Day 5](#Day-5)
 
 # Day 1
 
@@ -323,4 +324,184 @@ Now, whenever this line of code is run i.e event is emitted, the event listeners
 
 In a nutshell, an event emitter emits events, an event listeners listen to that event and the event handlers perform specific actions assigned to them when the event listeners register an event.
 
+# Day 4
 
+## Introduction to Express 
+
+Express is a small framework that sits on top of Node.js’s web server functionality to simplify its APIs and add helpful new features.It makes it easier to organize your application’s functionality with middle ware and routing.
+
+### Why Express Framework?
+
+- It is time efficient.
+- It is fast.
+- It is economical.
+- It is easy to learn.
+- It is asynchronous ( non-blocking ) in nature
+
+### Features of Express Framework
+
+- Fast Server-Side Development
+- Middleware
+- Routing
+- Templating
+- Debugging
+
+References taken from simplilearn and to know more about it you can click [here](https://www.simplilearn.com/tutorials/nodejs-tutorial/what-is-express-js).
+
+## Express installation
+
+To install express in your project you simply need to write `npm install express` in your terminal.
+
+## Starting a simple server with Express
+
+First you need to import the express module
+```
+const express = require('express')
+const app = express();
+```
+then initialize the listener
+
+`app.listen('3000')`
+
+Now for a get request on the home page you can write:
+```
+app.get("/", (req, res) => {
+  res.send(<h1>Hello there!!</h1>);
+});
+```
+
+and that's it!! You made a simple server using express.
+
+Now there are some points to be noted here. Firstly, we don't need to configure the localhost and we don't even need to specify the content type in the response header while using express. Also the code looks cleaner and much readable than writing it in Node.js
+
+### Displaying a HTML file using Express
+
+You can display a html file by writing:
+```
+app.get("/", (req, res) => {
+  res.sendFile("./pages/index.html", { root: __dirname });
+});
+```
+It sends back a file instead of a string. Note that there is another argument `{root:__dirname}` this is used to set the root directory as the curresnt directory and provide relative address for the file.
+
+This argument is optional if you choose to give an absolute path ( *not recommended* )
+
+You can set as many different html paths you like using the same way. Let us add another path that displays the about page.
+```
+app.get("/about", (req, res) => {
+  res.sendFile("./pages/about.html", { root: __dirname });
+});
+```
+Suppose this page's route was changed from `/about-us` to `/about`. We can add a redirect in the following way:
+```
+app.get("/about-us", (req, res) => {
+  res.redirect("/about");
+});
+```
+Note that we did not specify the status code. It's because express automatically sets up a status code for most of the responses.
+
+Now for a 404 page we use `app.use` to send the 404 page if none of the path matches above.
+```
+app.use((req, res) => {
+  res.status(404).sendFile("./pages/404.html", { root: __dirname });
+});
+
+```
+
+Altogether the code looks like:
+```
+const express = require("express");
+
+const app = express();
+
+app.listen(3000);
+
+app.get("/", (req, res) => {
+  res.sendFile("./pages/index.html", { root: __dirname });
+});
+app.get("/about", (req, res) => {
+  res.sendFile("./views/about.html", { root: __dirname });
+});
+
+//Redirect
+
+app.get("/about-us", (req, res) => {
+  res.redirect("/about");
+});
+
+//404 Page
+
+app.use((req, res) => {
+  res.status(404).sendFile("./views/404.html", { root: __dirname });
+});
+
+```
+
+## HTTP Methods
+
+HTTP defines a set of request methods to indicate the desired action to be performed for a given resource. 
+
+Some of the commonly used methods are:
+
+- `GET` - As the name suggests, it is used to get or retrieve data from the server.
+
+- `POST` - It submits an entity to the specified resource. Simply, it used to add data
+
+- `PUT` - It replaces all current representations of the target resource with the request payload.
+
+- `PATCH` - It applies partial modifications to a resource. Simply, it is used to update data.
+
+- `DELETE` - It deletes the specified resource.
+
+You can learn about more HTTP methods from the MDN docs or by simply clicking [here](https://developer.mozilla.org/en-US/docs/web/http/methods).
+
+### Postman
+
+Postman is an API platform for building and using APIs which simplifies each step of the API lifecycle and streamlines collaboration so you can create better APIs—faster.
+
+![postman-ui](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture.PNG)
+
+You can specify the type of request in postman to get desired results
+
+![postman-methods](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture(1).PNG)
+
+Here's a code to read, add, update and delete a user information using post, patch and delete request respectively
+
+```
+//GET request
+app.get("/user", (req, res) => {
+  res.send(users);
+});
+
+//POST request
+app.post("/user", (req, res) => {
+  console.log(req.body);
+  users = req.body;
+  res.json({
+    message: "data received succesfully",
+    user: req.body,
+  });
+});
+
+//PATCH request
+app.patch("/user", (req, res) => {
+  console.log("req-body", req.body);
+  //update data in users obj
+  let dataToBeUpdated = req.body;
+  for (key in dataToBeUpdated) {
+    users[key] = dataToBeUpdated[key];
+  }
+  res.json({
+    message: "data updated succesfully",
+    user: req.body,
+  });
+});
+
+//DELETE request
+app.delete("/user", (req, res) => {
+  users = {};
+  res.json({
+    message: "Users deleted succesfully",
+  });
+});
+```
