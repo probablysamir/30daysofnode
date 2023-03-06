@@ -18,6 +18,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 3](#Day-3)
 - [Day 4](#Day-4)
 - [Day 5](#Day-5)
+- [Day 6](#Day-6)
 
 # Day 1
 
@@ -505,3 +506,44 @@ app.delete("/user", (req, res) => {
   });
 });
 ```
+# Day 6
+
+## REST API
+
+REST API (Representational State Transfer Application Programming Interface) is an architectural style that enables communication between different systems and applications via HTTP requests. It is a popular approach for building web services that can be used by various clients, including web browsers, mobile apps, and other systems.
+
+REST API uses HTTP methods such as GET, POST, PUT, PATCH, and DELETE to perform operations on resources represented by URLs. It relies on stateless, client-server communication and the use of standard data formats such as JSON or XML for data exchange.
+
+![REST API](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture3.PNG)
+
+While designing a REST API it should align to the following six REST design principles ( architectural constraints ):
+- __Uniform Interface :__ All API requests for the same resource should look the same, no matter where the request comes from. The REST API should ensure that the same piece of data, such as the name or email address of a user, belongs to only one uniform resource identifier (URI). Resources shouldn’t be too large but should contain every piece of information that the client might need.
+
+- __Client-server decoupling :__ In REST API design, client and server applications must be completely independent of each other. The only information the client application should know is the URI of the requested resource; it can't interact with the server application in any other ways. Similarly, a server application shouldn't modify the client application other than passing it to the requested data via HTTP.
+
+- __Statelessness :__ REST APIs are stateless, meaning that each request needs to include all the information necessary for processing it. In other words, REST APIs do not require any server-side sessions. Server applications aren’t allowed to store any data related to a client request.
+
+- __Cacheability :__ When possible, resources should be cacheable on the client or server side. Server responses also need to contain information about whether caching is allowed for the delivered resource. The goal is to improve performance on the client side, while increasing scalability on the server side.
+
+- __Layered system architecture :__ In REST APIs, the calls and responses go through different layers. As a rule of thumb, don’t assume that the client and server applications connect directly to each other. There may be a number of different intermediaries in the communication loop. REST APIs need to be designed so that neither the client nor the server can tell whether it communicates with the end application or an intermediary.
+
+- __Code on demand (optional) :__ REST APIs usually send static resources, but in certain cases, responses can also contain executable code (such as Java applets). In these cases, the code should only run on-demand.
+
+References taken from IBM ( [here](https://www.ibm.com/topics/rest-apis) ).
+
+## Middlewares
+
+Middleware functions are functions that have access to the request object (req), the response object (res), and the next function in the application’s request-response cycle. The next function is a function in the Express router which, when invoked, executes the middleware succeeding the current middleware.
+
+Middleware functions can perform the following tasks:
+- Execute any code
+- Make changes to the request and the response objects
+- End the request-response cycle
+- Call the next middleware in the stack
+
+Diagramatic representation of request response cycle in express is shown below: 
+
+![request response cycle](https://iq.opengenus.org/content/images/2019/08/Add-a-subheading--2-.png)
+
+Note that if the current middleware function does not end the request-response cycle, it must call `next()` to pass control to the next middleware function. Otherwise, the request will be left hanging.
+
