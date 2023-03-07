@@ -19,6 +19,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 4](#Day-4)
 - [Day 5](#Day-5)
 - [Day 6](#Day-6)
+- [Day 7](#Day-7)
 
 # Day 1
 
@@ -547,3 +548,110 @@ Diagramatic representation of request response cycle in express is shown below:
 
 Note that if the current middleware function does not end the request-response cycle, it must call `next()` to pass control to the next middleware function. Otherwise, the request will be left hanging.
 
+# Day 7
+
+## Environmental Variables
+
+The variable which exists outside your code is a part of your server environment and can help you by both streamlining and making more secure the process of running your script and applications and they are called environmental variables.
+
+During the application initialization, these are loaded into the `process.env` and accessed by suffixing the name of the variable.
+
+We can set the environmental variables by setting the value before running the script. For example, to set the NODE_ENV variable to development we can run the command:
+```
+NODE_ENV=development nodemon server.js
+```
+We can also setup a new file to store all the values of the environmental variables. You can create a file with `.env` extension. In this case we create a file named `config.env`
+
+We can then store all the variables. For e.g.
+```
+NODE_ENV=development
+PORT=8000
+USER=jonas
+PASSWORD=123456
+```
+We can install the `dotenv` package by writing the command:
+```
+npm install dotenv
+```
+Now, to access the config file, we can import it by storing in a constant, in this case `dotenv`
+```
+const dotenv = require('dotenv')
+```
+we then set the path of the dotenv config to the file where we have stored the environmental variables
+```
+dotenv.config({path: './config.env' })
+```
+Note that these have to be done before importing the app module.
+
+## Mongo DB
+
+MongoDB is an open-source document-oriented database that is designed to store a large scale of data and also allows you to work with that data very efficiently. It is categorized under the NoSQL (Not only SQL) database because the storage and retrieval of data in the MongoDB are not in the form of tables. 
+
+- __Document Model :__  It is a document-oriented database, which means that data is stored as documents, and documents are grouped in collections.
+
+- __Sharding :__ Sharding is the process of splitting larger datasets across multiple distributed instances, or “shards.” When applied to particularly large datasets, sharding helps the database distribute and better execute what might otherwise be problematic and cumbersome queries.
+
+- __Replication :__ Replication allows you to deploy multiple servers for disaster recovery and backup.
+
+- __Authentication :__ Authentication ensures that only authorized users can access the database. MongoDB provides a number of authentication mechanisms for users to access the database.
+
+- __Indexing :__ Without the right indexes, a database is forced to scan documents one by one to identify the ones that match the query statement.
+
+- __Load Balancing :__ MongoDB supports large-scale load balancing via horizontal scaling features like replication and sharding.
+
+You can visit the mongodb official website for more indepth insights or simply click [here](https://www.mongodb.com/features).
+
+## Getting started with MongoDB
+
+To use a collection ( creates a collection if it already doesn't exist ) in this case testdb you can write this command in mongosh (mongoshell) :
+```
+use testdb
+```
+To insert a document in the collection you can write:
+```
+db.user.insertOne({ name:"Peter",age:21,height:5.67 })
+```
+
+![Insert Document](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture4.PNG)
+
+To check if it has been added to the db you can write:
+```
+db.user.find()
+```
+
+![Find Document](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture5.PNG)
+
+To add multiple documents into the collection you can simply write:
+```
+db.user.insertMany([{ name:"Mary",age:19,height:5.32 },{ name:"Steve",age:24,height:5.69,gender:"Male"}])
+```
+
+![Insert Documents](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture6.PNG)
+
+To find the documents with age = 19, We can do it by :
+```
+db.user.find({age:19})
+```
+
+![Find Documents](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture7.PNG)
+
+To find the documents with age > 19 :
+```
+db.user.find({age:{$gt: 19}})
+```
+
+![Find Documents](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture8.PNG)
+
+To find the documents with age <= 21 and height > 5.50 :
+```
+db.user.find({age:{$lte: 21},height:{$gt:5.50}})
+```
+
+![Find Documents](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture9.PNG)
+
+To find the documents with either age <= 21 or height > 5.50 :
+```
+db.user.find({$or: [{age:{$lte: 21}},{height:{$gt:5.50}}]})
+```
+
+![Find Documents](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture10.PNG)
