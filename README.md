@@ -692,6 +692,7 @@ To delete multiple documents with age >=19 you can write:
 db.user.deleteMany({age:{$gte:19}})
 ```
 
+![Delete Documents](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture14.PNG)
 
 You can also pass empty object to delete all documents:
 ```
