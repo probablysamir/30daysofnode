@@ -20,6 +20,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 5](#Day-5)
 - [Day 6](#Day-6)
 - [Day 7](#Day-7)
+- [Day 8](#Day-8)
 
 # Day 1
 
@@ -655,3 +656,112 @@ db.user.find({$or: [{age:{$lte: 21}},{height:{$gt:5.50}}]})
 ```
 
 ![Find Documents](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture10.PNG)
+
+# Day 8
+
+## Getting started with MongoDB (continued...)
+
+To update a single document, you can use `db.collection.updateOne()` and `db.collection.updateMany()` to update multiple documents. 
+
+For e.g, to update the age of the document with name peter to 21 you can simply write:
+
+```
+db.user.updateOne({name:'Peter'},{$set:{age:21}})
+```
+
+![Update Document](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture11.PNG)
+
+To update the age of the documents with height >=5.67 to 23 we can write:
+```
+db.user.updateMany({height:{$gte:5.67}},{$set:{age:23}})
+```
+
+![Update Documents](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture12.PNG)
+
+To delete a single document you can use `db.collection.deleteOne()` and `db.collection.deleteMany()` to delete multiple documents.
+
+To delete a document with name peter you can write:
+```
+db.user.deleteOne({name:'Peter'})
+```
+
+![Delete Document](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture13.PNG)
+
+To delete multiple documents with age >=19 you can write:
+```
+db.user.deleteMany({age:{$gte:19}})
+```
+
+
+You can also pass empty object to delete all documents:
+```
+db.user.deleteMany({})
+```
+
+![Delete Documents](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture15.PNG)
+
+## Getting familiar with the tools
+
+These are the tools we'll be using to work with MongoDB:
+
+- __MongoDB Compass :__ MongoDB Atlas is a cloud-based database service provided by MongoDB Inc. It allows users to easily deploy and manage MongoDB databases on various cloud platforms such as AWS, Google Cloud Platform, and Microsoft Azure. MongoDB Atlas offers a range of features such as automated backups, auto-scaling, and global distribution for high availability and low latency.
+
+- __MongoDB Atlas :__ MongoDB Atlas is a cloud-based database service provided by MongoDB Inc. It allows users to easily deploy and manage MongoDB databases on various cloud platforms such as AWS, Google Cloud Platform, and Microsoft Azure. MongoDB Atlas offers a range of features such as automated backups, auto-scaling, and global distribution for high availability and low latency.
+
+- __Mongoose :__ Mongoose is an Object-Document Mapping (ODM) library for Node.js and MongoDB. It allows developers to interact with MongoDB using a simple and consistent API, and provides features such as schema definition, validation, and middleware. Mongoose simplifies the process of defining data models and querying the database, and is widely used in Node.js applications that use MongoDB as their data store.
+
+## Model and schema in Mongoose
+
+In Mongoose, a schema is a blueprint for defining the structure and data types of documents (records) that will be stored in a MongoDB database collection. It defines the fields and their properties, such as data type, validation rules, default values, and indexes.
+
+A schema is typically defined using the Mongoose Schema class, which allows you to define fields using JavaScript data types such as String, Number, Date, Boolean, and more. You can also define sub-documents and arrays of sub-documents using nested schemas.
+
+Here is an example of a simple Mongoose schema for a user information:
+```
+const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true,'A user should have a name']
+  },
+  age: {
+    type: Number,
+    required: [true,'A user should have an age']
+  }
+  isVeg: {
+    type: Boolean,
+    default: false
+  }
+});
+```
+
+In Mongoose, a model is a constructor function that is compiled from a schema definition and represents a collection in MongoDB. A model provides an interface for querying and manipulating documents that belong to a specific collection.
+
+You can create a model in Mongoose by calling the mongoose.model() method and passing in the name of the model, the schema definition, and optionally a collection name (if you want to use a different name than the default, which is based on the model name).
+
+Here is an example of creating a Mongoose model for the user schema we defined earlier:
+```
+const User = mongoose.model('User',userSchema)
+```
+
+We can then further create a document using the model. For example:
+```
+const testUser = new User({
+  name: 'Peter',
+  age: 19,
+  isVeg: false
+});
+```
+To save the document in the data base we can use `testUser.save()`. Since it returns a promise we can write:
+
+```
+testUser
+  .save()
+  .then((doc) => {
+    console.log(doc);
+  })
+  .catch((err) => {
+    console.log('Error : ', err);
+  });
+```
