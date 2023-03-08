@@ -4,7 +4,7 @@ I will be learning and coding NodeJS for 30 days and I will be updating daily ab
 
 # Resources
 
-I'll be posting more and more resources I encounter in my journey.
+I'll be posting more and more resources I encounter in my journey. Also I've placed reference links in the documentation too so that you can visit there for a deeper understanding.
 
 For now, these are the resources I'm following:
 
