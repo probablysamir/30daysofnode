@@ -21,6 +21,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 6](#Day-6)
 - [Day 7](#Day-7)
 - [Day 8](#Day-8)
+- [Day 9](#Day-9)
 
 # Day 1
 
