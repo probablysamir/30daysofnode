@@ -766,3 +766,87 @@ testUser
     console.log('Error : ', err);
   });
 ```
+
+# Day 9
+
+## MVC Architecture
+
+MVC stands for Model-View-Controller and is a software architectural pattern used in designing applications. It separates an application into three interconnected components: the __Model, View, and Controller.__
+
+- __Model :__ The backend that contains all the data logic.
+- __View :__ The frontend or graphical user interface (GUI)
+- __Controller :__ The brains of the application that controls how data is displayed
+
+![MVC Architecture](https://www.freecodecamp.org/news/content/images/size/w1600/2021/04/MVC3.png)
+
+The key benefit of the MVC architecture is that it separates concerns and allows for the individual components to be developed, tested, and maintained independently. This makes the code more modular, easier to understand, and easier to maintain over time. 
+
+### Features of MVC architecture:
+
+- __Modularity__: Promotes a modular approach to application development.
+- __Separation of concerns__: Ensures each component has a distinct responsibility.
+- __Testability__: Makes it easier to test individual components.
+- __Flexibility__: Allows for flexibility in application design.
+- __Code reusability__: Allows for code reuse across different applications.
+- __Scalability__: Can be scaled to meet the needs of larger applications.
+- __Maintenance__: Makes it easier to maintain an application over time.
+
+## Implementing MVC architecture :
+
+The Model is responsible for representing the data and the rules that govern how the data can be accessed and manipulated. It contains the business logic, which defines the operations and processes that the application must perform to implement the business rules.
+
+The Controller acts as an intermediary between the View and the Model components. It receives input from the user via the View, processes the input, and updates the Model accordingly. It also contains the application logic, which defines the behavior of the application and determines how it responds to user input.
+
+Let's create a tour model using mongoose and export it :
+```
+const mongoose = require('mongoose');
+
+const tourSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'A tour must have a name'],
+    unique: true,
+    trim: true,
+  },
+  duration: {
+    type: Number,
+    required: [true, 'A tour must have a duration'],
+  },
+  maxGroupSize: {
+    type: Number,
+    required: [true, 'A tour must have a group size'],
+  },
+  difficulty: {
+    type: String,
+    required: [true, 'A tour must have a difficulty'],
+  },
+});
+
+const Tour = mongoose.model('Tour', tourSchema);
+
+module.exports = Tour;
+```
+
+We now create a controller to create a new tour and store in the database by referring to the tour model:
+```
+const Tour = require('../models/tourModel');
+
+exports.createTour = async (req, res) => {
+  try {
+    const newTour = await Tour.create(req.body);
+    res.status(201).json({
+      staus: 'success',
+      data: {
+        tour: newTour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: 'Invalid data sent',
+    });
+  }
+};
+```
+
+We store these in different folders; `controllers` and `models`. 
