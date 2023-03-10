@@ -22,6 +22,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 7](#Day-7)
 - [Day 8](#Day-8)
 - [Day 9](#Day-9)
+- [Day 10](#Day-10)
 
 # Day 1
 
@@ -919,3 +920,58 @@ exports.deleteTour = async (req, res) => {
   }
 };
 ```
+
+# Day 10
+
+## Script to read data from json file and upload to database
+
+Here's the script to read data from json file and upload to database:
+```
+const fs = require('fs');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const Tour = require('../../models/tourModel');
+
+dotenv.config({ path: `${__dirname}/../../config.env` });
+
+const DB = process.env.DATABASE.replace(
+  '<PASSWORD>',
+  process.env.DATABASE_PASSWORD
+);
+
+mongoose.connect(DB).then(() => {
+  console.log('DB connection succesful');
+});
+
+//READ JSON FILE
+const tours = JSON.parse(
+  fs.readFileSync(`${__dirname}/tours-simple.json`, 'utf-8')
+);
+
+//IMPORT DATA INTO DATABASE
+const importData = async () => {
+  try {
+    await Tour.create(tours);
+    console.log('Data succesfully loaded');
+    process.exit();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const deleteData = async () => {
+  try {
+    await Tour.deleteMany();
+    console.log('Data succesfully deleted!');
+    process.exit();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+if (process.argv[2] === '--import') importData();
+if (process.argv[2] === '--delete') deleteData();
+
+console.log(process.argv);
+```
+Use `node script.js --delete` to delete the data and `node script.js --import` to import the data.
