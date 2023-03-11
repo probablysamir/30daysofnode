@@ -975,3 +975,49 @@ if (process.argv[2] === '--delete') deleteData();
 console.log(process.argv);
 ```
 Use `node script.js --delete` to delete the data and `node script.js --import` to import the data.
+
+# Day 11
+
+## Handling Queries
+
+Handling queries is an important aspect of designing and implementing an API. Queries allow API users to specify the specific data they need to retrieve from the API, which can help reduce the amount of data transmitted over the network and improve performance.
+
+Importance of handling queries are:
+
+- __Efficiency:__ Queries can help reduce the amount of data returned by the API, which can improve the efficiency and speed of the API. By allowing users to specify only the data they need, we can reduce the amount of data transferred over the network and minimize server load.
+
+- __Flexibility:__ Query parameters can provide users with the flexibility to customize their requests and retrieve data based on specific criteria. This can be useful in cases where the user only needs a subset of the available data, or where the data needs to be filtered or sorted in a particular way.
+
+- __Usability:__ By providing query parameters, we can make our API more user-friendly and easier to use. Query parameters can provide users with a more intuitive way to interact with the API, as they can specify their requests using familiar URL syntax.
+
+- __Compatibility:__ Query parameters are a widely accepted standard in web development, and are compatible with a variety of programming languages and platforms. By implementing query parameters in your API, you can make it easier for developers to integrate your API into their applications.
+
+## Handling queries with mongoose
+
+We first create a copy of the `req.query` using the spread operator:
+```
+const queryObj = { ...req.query };
+```
+We now filter `sort`, `page`, `limit` and `field` so that we can handle the specific queries separate and treat sorting and other stuffs independently
+```
+const excludedFields = ['page', 'sort', 'limit', 'fields'];
+excludedFields.forEach((element) => delete queryObj[element]);
+```
+We can then use advanced filtering to filter out the results using gte,gt,lte and lt
+```
+let queryStr = JSON.stringify(queryObj);
+queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+let query = Tour.find(JSON.parse(queryStr));
+```
+### Sorting in Mongoose
+
+Sorting is done by using the `query.sort()` function
+```
+if (req.query.sort) {
+  const sortBy = req.query.sort.split(',').join(' ');
+  query = query.sort(sortBy);
+} else {
+  query = query.sort('-createdAt');
+}
+```
+Here `split()` and `join()` are used to sort queries based on multiple parameters.
