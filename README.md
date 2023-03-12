@@ -23,6 +23,8 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 8](#Day-8)
 - [Day 9](#Day-9)
 - [Day 10](#Day-10)
+- [Day 11](#Day-11)
+- [Day 12](#Day-12)
 
 # Day 1
 
@@ -1021,3 +1023,57 @@ if (req.query.sort) {
 }
 ```
 Here `split()` and `join()` are used to sort queries based on multiple parameters.
+
+# Day 12
+
+## Handling Queries (continued...)
+
+### Field Limiting 
+
+Field limiting in queries means specifying which fields in a document should be returned by a query. It helps to reduce query result size, improve query performance, and increase security by preventing unauthorized access to sensitive data.
+
+To do field limiting in mongoose:
+```
+if (req.query.fields) {
+  const fields = req.query.fields.split(',').join(' ');
+  query = query.select(fields);
+} else {
+  query = query.select('-__v');
+}
+```
+
+### Pagination
+
+Pagination refers to the process of dividing large sets of database records into smaller, more manageable chunks called "pages." Pagination allows you to retrieve only a subset of the data at a time, rather than loading all the records at once.
+
+In Mongoose, pagination can be implemented using the `skip()` and `limit()` methods. The `skip()` method skips a specified number of records in the result set, while the `limit()` method specifies the maximum number of records to return in each page.
+
+To achieve pagination in mongoose:
+```
+const page = req.query.page * 1 || 1;
+const limit = req.query.limit * 1 || 100;
+const skip = (page - 1) * limit;
+query = query.skip(skip).limit(limit);
+```
+We can also throw back an error if we skip more documents than the total number of documents available. We can do this by:
+```
+if (req.query.page) {
+  const numTours = await Tour.countDocuments();
+  if (skip >= numTours) throw new Error('This page does not exist');
+}
+```
+
+### Executing the query
+
+Finally after modifying the query according to our demands we then retrieve the data. We can do this using `await`:
+```
+const tours = await query;
+```
+
+## Introduction to Aggregation Pipeline
+
+Aggregation Pipeline is a powerful feature of MongoDB that enables data processing and transformation of documents in a collection. It is a framework for performing data aggregation operations on a collection in MongoDB, similar to SQL's GROUP BY clause. It allows you to perform a series of data processing steps on the input documents to produce a final output.
+
+The aggregation pipeline in MongoDB is a sequence of stages, where each stage is a transformation operation on the input documents. Each stage takes the output of the previous stage and passes it to the next stage. The pipeline supports a wide range of data manipulation operations, such as filtering, grouping, sorting, projecting, and aggregating.
+
+![Aggregation Pipeline](https://www.c-sharpcorner.com/article/aggregation-pipeline-in-mongodb/Images/image001.gif)
