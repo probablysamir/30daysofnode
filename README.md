@@ -1070,6 +1070,85 @@ Finally after modifying the query according to our demands we then retrieve the 
 const tours = await query;
 ```
 
+## Refactoring Queries
+
+Although the above methods work fine but it is not reusable and is hard to read so we refactor our code to make it more reusable and easy to read and work with.
+
+In order to do that we create a class and apply various methods:
+```
+class APIfeatures {
+  constructor(query, queryString) {
+    this.query = query;
+    this.queryString = queryString;
+  }
+
+  filter() {
+    //BUILD QUERY
+    const queryObj = { ...this.queryString };
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach((element) => delete queryObj[element]);
+
+    //ADVANCED FILTERING
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    this.query = this.query.find(JSON.parse(queryStr));
+
+    return this;
+  }
+
+  sort() {
+    //SORTING
+    if (this.queryString.sort) {
+      const sortBy = this.queryString.sort.split(',').join(' ');
+      this.query = this.query.sort(sortBy);
+    } else {
+      this.query = this.query.sort('-createdAt');
+    }
+
+    return this;
+  }
+
+  limitFields() {
+    //FIELDLIMITING
+    if (this.queryString.fields) {
+      const fields = this.queryString.fields.split(',').join(' ');
+      this.query = this.query.select(fields);
+    } else {
+      this.query = this.query.select('-__v');
+    }
+
+    return this;
+  }
+
+  paginate() {
+    //PAGINATION
+    const page = this.queryString.page * 1 || 1;
+    const limit = this.queryString.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+    this.query = this.query.skip(skip).limit(limit);
+
+    return this;
+  }
+}
+```
+We can then store this in a separate file and then export by writing:
+```
+module.exports = APIfeatures;
+```
+
+To execute the query we can simply write :
+```
+//EXECUTE QUERY
+const features = new APIfeatures(Tour.find(), req.query)
+  .filter()
+  .sort()
+  .limitFields()
+  .paginate();
+const tours = await features.query;
+```
+This way the code is more organized, reusable and easy to read
+
 ## Introduction to Aggregation Pipeline
 
 Aggregation Pipeline is a powerful feature of MongoDB that enables data processing and transformation of documents in a collection. It is a framework for performing data aggregation operations on a collection in MongoDB, similar to SQL's GROUP BY clause. It allows you to perform a series of data processing steps on the input documents to produce a final output.
