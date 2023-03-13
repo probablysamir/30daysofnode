@@ -25,6 +25,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 10](#Day-10)
 - [Day 11](#Day-11)
 - [Day 12](#Day-12)
+- [Day 13](#Day-13)
 
 # Day 1
 
@@ -1156,3 +1157,150 @@ Aggregation Pipeline is a powerful feature of MongoDB that enables data processi
 The aggregation pipeline in MongoDB is a sequence of stages, where each stage is a transformation operation on the input documents. Each stage takes the output of the previous stage and passes it to the next stage. The pipeline supports a wide range of data manipulation operations, such as filtering, grouping, sorting, projecting, and aggregating.
 
 ![Aggregation Pipeline](https://www.c-sharpcorner.com/article/aggregation-pipeline-in-mongodb/Images/image001.gif)
+
+# Day 13
+
+## Aggregation Pipeline
+
+An aggregation pipeline consists of one or more stages that process documents:
+
+- Each stage performs an operation on the input documents. For example, a stage can filter documents, group documents, and calculate values.
+
+- The documents that are output from a stage are passed to the next stage.
+
+- An aggregation pipeline can return results for groups of documents. For example, return the total, average, maximum, and minimum values.
+
+### Using Aggregation pipelines
+
+Suppose we have a database storing the tours. We will be using aggregation pipeline to group the tours on the basis of difficulty and calculate the number of tours, number of ratings, average ratings, average price, minimum and maximum price of the tours of that difficulty.
+
+To do that we use `Tour.aggregate()` function where `Tour` is the model of the document.
+
+```
+exports.getTourStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+      //To filter the data with average rating greater or equal to 4.5
+
+        $match: { ratingsAverage: { $gte: 4.5 } },
+      },
+      {
+        $group: {
+          //Grouping the data based on difficulty
+          _id: { $toUpper: '$difficulty' },
+
+          //Adding 1 for each document passed
+          numTours: { $sum: 1 },
+
+          //Using the inbuilt keywords to calculate sum, average, maximum and minimum
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      {
+        //To sort the data on the basis of average price (ascending)
+        $sort: { avgPrice: 1 },
+      },
+    ]);
+
+    //Sending back the response of the data received from aggregation pipeline
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: 'Invalid data sent',
+    });
+  }
+};
+```
+
+We have exported the async function so that we can route it in the routes file. In order to do so:
+```
+const express = require('express');
+const tourController = require('../controllers/tourController');
+
+const router = express.Router();
+
+router.route('/tour-stats').get(tourController.getTourStats);
+```
+
+Let us use aggrregation pipeline to group and get the data on the basis of months it will start and in a specific year:
+
+For this, let us create a route:
+```
+router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
+```
+then we create the async function to handle the request using aggregation:
+```
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const year = req.params.year * 1;
+    const plan = await Tour.aggregate([
+      {
+
+//It deconstruct an array field in a document and create separate output documents for each item in the array
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numTourStarts: { $sum: 1 },
+          tours: { $push: '$name' },
+        },
+      },
+      {
+
+        //Create a field month with same value of _id
+        $addFields: { month: '$_id' },
+      },
+      {
+        $project: {
+
+          //Hides the id from the output
+          _id: 0,
+        },
+      },
+      {
+
+        //Sorts the data according to num of tours in a month (descending)
+        $sort: { numTourStarts: -1 },
+      },
+      {
+
+        //Limits the output to 12 items (not necessary)
+        $limit: 12,
+      },
+    ]);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        plan,
+      },
+    });
+  } catch {
+    res.status(400).json({
+      status: 'fail',
+      message: 'Invalid data sent',
+    });
+  }
+};
+```
+
+You can check more on aggregation pipeline in MongoDB's official documentation or simply click [here](https://www.mongodb.com/docs/manual/core/aggregation-pipeline/).
