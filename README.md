@@ -1304,3 +1304,39 @@ exports.getMonthlyPlan = async (req, res) => {
 ```
 
 You can check more on aggregation pipeline in MongoDB's official documentation or simply click [here](https://www.mongodb.com/docs/manual/core/aggregation-pipeline/).
+
+# Day 14
+
+## Aggregation Pipeline Operators
+
+Aggregation pipeline operators are tools used in MongoDB, a popular NoSQL database, to manipulate and process data in complex ways. These operators allow you to perform operations such as filtering, grouping, sorting, transforming, and combining data, using a pipeline of stages to progressively modify the data.
+
+The pipeline consists of a series of stages, where each stage performs a specific operation on the data and passes the results to the next stage in the pipeline. The operators used in each stage determine the operation performed on the data. Some examples of aggregation pipeline operators include $match, $group, $sort, $project, $limit, $skip, $unwind, $lookup, $facet, and many others.
+
+By using these operators in combination, you can create powerful and flexible queries that can handle a wide range of data processing tasks, from simple filtering and sorting to complex data transformations and aggregations.
+
+### Expression Operators :
+These expression operators are available to construct expressions for use in the aggregation pipeline stages.
+
+Operator expressions are similar to functions that take arguments. In general, these expressions take an array of arguments and have the following form:
+  - Arithmetic Expression Operators
+  - Array Expression Operators
+  - Boolean Expression Operators
+  - Comparison Expression Operators
+  - Conditional Expression Operators
+  - Custom Aggregation Expression Operators
+  - Data Size Operators
+  - Date Expression Operators
+  - Literal Expression Operators
+  - Miscellaneous Operators
+  - Object Expression Operators
+  - Set Expression Operators
+  - String Expression Operators
+  - Test Expression Operators
+  - Timestamp Expression Operators
+  - Trigonometry Expression Operators
+  - Type Expression Operators
+
+To reduce the volume of the documentation and avoid just copy pasting everything from the official documentation I haven't documented the details, functions and examples of these operators.
+
+You can manually open the official documentation of MongoDB or simply click [here](https://www.mongodb.com/docs/manual/reference/operator/aggregation/).
