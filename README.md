@@ -1322,6 +1322,8 @@ Operator expressions are similar to functions that take arguments. In general, t
 ```
 { <operator>: [ <argument1>, <argument2> ... ] }
 ```
+The types of expression operators are:
+
   - Arithmetic Expression Operators
   - Array Expression Operators
   - Boolean Expression Operators
