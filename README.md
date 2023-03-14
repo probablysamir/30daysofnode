@@ -1319,6 +1319,9 @@ By using these operators in combination, you can create powerful and flexible qu
 These expression operators are available to construct expressions for use in the aggregation pipeline stages.
 
 Operator expressions are similar to functions that take arguments. In general, these expressions take an array of arguments and have the following form:
+```
+{ <operator>: [ <argument1>, <argument2> ... ] }
+```
   - Arithmetic Expression Operators
   - Array Expression Operators
   - Boolean Expression Operators
