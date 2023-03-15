@@ -26,6 +26,8 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 11](#Day-11)
 - [Day 12](#Day-12)
 - [Day 13](#Day-13)
+- [Day 14](#Day-14)
+- [Day 15](#Day-15)
 
 # Day 1
 
@@ -1345,3 +1347,95 @@ The types of expression operators are:
 To reduce the volume of the documentation and avoid just copy pasting everything from the official documentation I haven't documented the details, functions and examples of these operators.
 
 You can manually open the official documentation of MongoDB or simply click [here](https://www.mongodb.com/docs/manual/reference/operator/aggregation/).
+
+# Day 15
+
+## Aggregation Pipeline Operators (cont...)
+
+There are other type of Aggregation Pipeline Operators:
+
+- __Accumulators:__ An accumulator is an operator that is used to aggregate data and compute aggregate values such as sum, count, average, and more.
+
+  Accumulators are used in conjunction with the `$group` stage of the aggregation pipeline to `group` the documents by a specified field or set of fields, and then compute an aggregate value for each `group`. The accumulator operators take a field as input and produce a single output value for the `group`.
+
+- __Window Operators:__  A window operator is an operator that is used to perform calculations on a subset of documents within a `group`.
+
+  Window functions in MongoDB were introduced in version 3.6 of the MongoDB server. They operate on a set of documents within a specified window or frame, which is defined by an aggregation stage, and can be used to compute rankings, running totals, moving averages, and more.
+
+## Aggregation Pipeline Optimization
+
+Aggregation pipeline operations have an optimization phase which attempts to reshape the pipeline for improved performance.
+
+### Projection Optimization:
+
+Aggregation pipeline operations have an optimization phase which attempts to reshape the pipeline for improved performance.
+
+When you use a `$project` operator it is usually written at the last stage of the pipeline. Using it at the beginning or in the middle is not helpful to improve performance, since the database performs this optimization automatically.
+
+### Pipeline Sequence Optimization:
+
+When using various stages in an aggregation, the aggregation pipeline will determine which stage should preceed the another and in times might destructure the stages to use it in an optimal sequence.
+
+Some of the sequence optimizations in MongoDB are:
+
+- __(`$project` or `$unset` or `$addFields` or `$set`) + `$match` Sequence Optimization:__
+
+  Whenever there are these stages (projection stages) MongoDB moves the filter of the `$match` which do not depend on the computed value of the projection before the computation so that the documents in which it has to compute on is significantly reduced. 
+
+- __``$sort`` + `$match` Sequence Optimization:__
+
+  When you have a sequence with `$sort` followed by a `$match`, the `$match` moves before the `$sort` to minimize the number of objects to `$sort`.
+
+- __`$redact`+`$match` Sequence Optimization:__
+
+  When possible, when the pipeline has the $redact stage immediately followed by the `$match` stage, the aggregation can sometimes add a portion of the `$match` stage before the $redact stage. If the added `$match` stage is at the start of a pipeline, the aggregation can use an index as well as query the collection to limit the number of documents that enter the pipeline.
+
+- __`$project`/`$unset` + `$skip` Sequence Optimization:__
+
+  When you have a sequence with $project or $unset followed by $skip, the $skip moves before $project.
+
+### Pipeline Coalescence Optimization:
+
+When possible, the optimization phase coalesces(merges) a pipeline stage into its predecessor.
+
+- __`$sort`` + `$limit` Coalescence:__
+
+  When a `$sort` precedes a `$limit`, the optimizer can coalesce the `$limit` into the `$sort` if no intervening stages modify the number of documents (e.g. `$unwind`, `$group`).
+
+- __`$limit` + `$limit` Coalescence:__
+
+  When a `$limit` immediately follows another `$limit`, the two stages can coalesce into a single `$limit` where the limit amount is the smaller of the two initial limit amounts.
+
+- __`$skip` + `$skip` Coalescence:__
+
+  When a `$skip` immediately follows another `$skip`, the two stages can coalesce into a single `$skip` where the skip amount is the sum of the two initial skip amounts
+
+- __`$match` + `$match` Coalescence:__ 
+
+  When a `$match` immediately follows another `$match`, the two stages can coalesce into a single `$match` combining the conditions with an `$and`.
+
+- __`$lookup` + `$unwind` Coalescence:__ 
+
+  When a `$unwind` immediately follows another `$lookup`, and the `$unwind` operates on the as field of the `$lookup`, the optimizer can coalesce the `$unwind` into the `$lookup` stage. This avoids creating large intermediate documents.
+
+### Improve Performance with Indexes and Document Filters:
+
+-  __Indexes:__
+
+    An aggregation pipeline can use indexes from the input    collection to improve performance. Using an index limits the  amount of documents a stage processes. Ideally, an index can cover the stage query. A covered query has especiallly high performance, since the index returns all matching documents.
+
+    For example, a pipeline that consists of `$match`, `$sort`, `$group` can benefit from indexes at every stage:
+    - An index on the `$match` query field can efficiently identify the relevant data
+    - An index on the sorting field can return data in sorted order for the `$sort` stage
+
+    - An index on the grouping field that matches the `$sort` order can return all of the field values needed to execute the `$group` stage (a covered query)
+
+- __Document Filters:__
+
+  If your aggregation operation requires only a subset of the documents in a collection, filter the documents first:
+
+    - Use the $match, $limit, and $skip stages to restrict the documents that enter the pipeline.
+
+    - When possible, put $match at the beginning of the pipeline to use indexes that scan the matching documents in a collection.
+
+    - $match followed by $sort at the start of the pipeline is equivalent to a single query with a sort, and can use an index.
