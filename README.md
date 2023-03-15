@@ -1398,7 +1398,7 @@ Some of the sequence optimizations in MongoDB are:
 
 When possible, the optimization phase coalesces(merges) a pipeline stage into its predecessor.
 
-- __`$sort`` + `$limit` Coalescence:__
+- __`$sort` + `$limit` Coalescence:__
 
   When a `$sort` precedes a `$limit`, the optimizer can coalesce the `$limit` into the `$sort` if no intervening stages modify the number of documents (e.g. `$unwind`, `$group`).
 
