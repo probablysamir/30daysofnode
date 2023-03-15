@@ -1439,3 +1439,5 @@ When possible, the optimization phase coalesces(merges) a pipeline stage into it
     - When possible, put `$match` at the beginning of the pipeline to use indexes that scan the matching documents in a collection.
 
     - `$match` followed by `$sort` at the start of the pipeline is equivalent to a single query with a sort, and can use an index.
+
+To have deeper insights, you can visit MongoDB official documentation or simply click [here](https://www.mongodb.com/docs/manual/core/aggregation-pipeline-optimization/)
