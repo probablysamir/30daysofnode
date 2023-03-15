@@ -1434,8 +1434,8 @@ When possible, the optimization phase coalesces(merges) a pipeline stage into it
 
   If your aggregation operation requires only a subset of the documents in a collection, filter the documents first:
 
-    - Use the $match, $limit, and $skip stages to restrict the documents that enter the pipeline.
+    - Use the `$match`, `$limit`, and `$skip` stages to restrict the documents that enter the pipeline.
 
-    - When possible, put $match at the beginning of the pipeline to use indexes that scan the matching documents in a collection.
+    - When possible, put `$match` at the beginning of the pipeline to use indexes that scan the matching documents in a collection.
 
-    - $match followed by $sort at the start of the pipeline is equivalent to a single query with a sort, and can use an index.
+    - `$match` followed by `$sort` at the start of the pipeline is equivalent to a single query with a sort, and can use an index.
