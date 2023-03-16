@@ -1441,3 +1441,78 @@ When possible, the optimization phase coalesces(merges) a pipeline stage into it
     - `$match` followed by `$sort` at the start of the pipeline is equivalent to a single query with a sort, and can use an index.
 
 To have deeper insights, you can visit MongoDB official documentation or simply click [here](https://www.mongodb.com/docs/manual/core/aggregation-pipeline-optimization/)
+
+# Day 16
+
+## Document Middleware:
+
+Document middleware is supported for the following document functions.
+
+- validate
+- save
+- remove
+- updateOne
+- deleteOne
+- init
+
+In document middlewares, `this` refers to the document.
+Example of a document middleware is:
+```
+tourSchema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+```
+This runs before the save function this middleware adds slug field to the document using the `this` keyword.
+
+Similarly, we can write a middleware for `model.post()`
+
+## Query Middleware
+
+Document middleware is supported for the following document functions.
+
+- count
+- countDocuments
+- deleteMany
+- deleteOne
+- estimatedDocumentCount
+- find
+- findOne
+- findOneAndDelete
+- findOneAndRemove
+- findOneAndReplace
+- findOneAndUpdate
+- remove
+- replaceOne
+- update
+- updateOne
+- updateMany
+- validate
+
+Query middleware executes when you call exec() or then() on a Query object, or await on a Query object. In query middleware functions, this refers to the query.
+
+Example of query middleware:
+```
+tourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  next();
+});
+```
+Here, we used the regex expression `/^find/` instead of `find` so that the middleware for all find methods of mongoose. Here, the function chains the `.find()` method so that the document having the secretTour set to true is filtered out in the result.
+
+Similarly, we can write a middleware for `model.post()`
+
+## Aggregation Middleware
+
+Aggregate middleware is for `MyModel.aggregate()`. Aggregate middleware executes when you call `exec()` on an aggregate object. In aggregate middleware, this refers to the aggregation object.
+
+Example of aggregation middleware:
+```
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  next();
+});
+```
+This adds yet another filter to the aggregation pipeline so that the secretTour data is not aggregated.
+
+Similarly, we can write a middleware for `MyModel.post()`
