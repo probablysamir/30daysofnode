@@ -28,6 +28,8 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 13](#Day-13)
 - [Day 14](#Day-14)
 - [Day 15](#Day-15)
+- [Day 16](#Day-16)
+- [Day 17](#Day-17)
 
 # Day 1
 
@@ -1516,3 +1518,53 @@ tourSchema.pre('aggregate', function (next) {
 This adds yet another filter to the aggregation pipeline so that the secretTour data is not aggregated.
 
 Similarly, we can write a middleware for `MyModel.post()`
+
+# Day 17
+
+## Validators
+
+Validators in MongoDB and Mongoose are functions that are used to enforce certain constraints on the data that is stored in a database. Validators can be defined at the schema level, and can be used to ensure that the data that is stored in a particular field or document meets certain requirements.
+
+### Built-In Validators
+
+They are the validators that comes predefined with mongoose. We can simply specify the inbuilt validators like type, required, maxLength, etc. within the fieldname.
+
+For Example:
+```
+ name: {
+      type: String,
+      required: [true, 'A tour must have a name'],
+      maxLength: [40, 'A tour name must have less or equal than 40 characters'],
+```
+
+### Custom Validators
+
+They are the validators that we define ourself or the validators that we import from external modules. We use the `validate:` field to define custom validators.
+
+For Example:
+```
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function (val) {
+          // this only points to current doc on NEW document creation
+          return val < this.price;
+        },
+        message: 'Discount price ({VALUE}) should be below regular price',
+      },
+    },
+```
+
+## NDB 
+
+ndb is an open-source Node.js debugger built on top of Chrome DevTools. It provides a graphical user interface (GUI) that allows developers to inspect and debug Node.js applications in a browser-like environment. Some of the features of "ndb" include:
+
+- __Breakpoints:__ Developers can set breakpoints in their code and step through it line-by-line to see how it executes.
+
+- __Console:__ "ndb" provides a console where developers can interact with their code and run arbitrary JavaScript commands.
+
+- __Call stack:__ The call stack shows the current state of the code and allows developers to see how functions are called and in what order.
+
+- __Memory profiling:__ "ndb" includes a memory profiler that helps developers identify memory leaks and other performance issues in their code.
+
+Overall, ndb is a powerful tool that makes it easier for developers to debug Node.js applications and find and fix bugs more efficiently.
