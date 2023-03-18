@@ -30,6 +30,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 15](#Day-15)
 - [Day 16](#Day-16)
 - [Day 17](#Day-17)
+- [Day 18](#Day-18)
 
 # Day 1
 
@@ -1568,3 +1569,104 @@ ndb is an open-source Node.js debugger built on top of Chrome DevTools. It provi
 - __Memory profiling:__ "ndb" includes a memory profiler that helps developers identify memory leaks and other performance issues in their code.
 
 Overall, ndb is a powerful tool that makes it easier for developers to debug Node.js applications and find and fix bugs more efficiently.
+
+# Day 18
+
+## Class Validators
+
+Class validators are functions or methods that validate the input data of a class or object. These validators are typically used to ensure that the input data meets certain requirements or constraints before it is processed by the class or object.
+
+For example, consider a class that represents a user profile. This class may have properties such as "username", "email", and "password". In order to ensure that these properties are valid, the class may define validator methods for each property. These validators can check if the input data is of the correct type, length, or format.
+```
+class UserProfile {
+  constructor(username, password) {
+    this.username = username;
+    this.password = password;
+  }
+
+  validateUsername() {
+    if (typeof this.username !== 'string' || this.username.length < 3) {
+      throw new Error('Invalid username. Must be a string of at least 3 characters.');
+    }
+  }
+
+  validatePassword() {
+    if (typeof this.password !== 'string' || this.password.length < 8) {
+      throw new Error('Invalid password. Must be a string of at least 8 characters.');
+    }
+  }
+
+  validateAll() {
+    this.validateUsername();
+    this.validatePassword();
+  }
+}
+
+const user = new UserProfile('peter', 'mypassword');
+user.validateAll();
+```
+
+## Class Transformers
+
+Class transformers are functions or methods that transform the input data of a class or object. These transformers are used to convert data from one format to another, or to perform some other operation on the input data before it is processed by the class or object.
+
+Class transformers can be used for a wide range of tasks, such as data normalization, data cleaning, or data formatting. They are often used in conjunction with class validators to ensure that the input data is in the correct format before it is transformed.
+
+```
+class UserProfile {
+  constructor(username, password) {
+    this.username = username;
+    this.password = password;
+  }
+
+  transformUsername() {
+    // Transform username to lowercase
+    this.username = this.username.toLowerCase();
+  }
+
+  transformPassword() {
+    // Hash password
+    this.password = hash(this.password);
+  }
+
+  transformAll() {
+    this.transformUsername();
+    this.transformPassword();
+  }
+}
+
+const user = new UserProfile("Peter", "mypassword");
+user.transformAll(); // Transforms all properties of the user profile
+```
+
+## YUP
+
+Yup is a JavaScript schema validation library that allows you to define a schema, or set of rules, for validating JavaScript objects. Yup makes it easy to define and enforce data validation rules, such as required fields, string length limits, and format validation.
+
+Yup is often used in web development, where it can be used to validate form data before it is submitted to a server. It can also be used in other contexts where data validation is important, such as in data processing pipelines or API input validation.
+
+Here is an example of how Yup can be used to define a schema and validate an object:
+
+```
+import * as yup from 'yup';
+
+const schema = yup.object().shape({
+  name: yup.string().required(),
+  email: yup.string().email().required(),
+  age: yup.number().positive().integer().required(),
+});
+
+const data = {
+  name: 'Peter Lee',
+  email: 'peter@example.com',
+  age: 21,
+};
+
+schema.validate(data)
+  .then(valid => console.log(valid))
+  .catch(err => console.log(err));
+```
+
+Also, I have made a form verification using YUP in react.
+
+You can check it out by clicking [here](https://github.com/probablysamir/practiceForm-react).
