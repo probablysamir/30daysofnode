@@ -31,6 +31,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 16](#Day-16)
 - [Day 17](#Day-17)
 - [Day 18](#Day-18)
+- [Day 19](#Day-19)
 
 # Day 1
 
@@ -1670,3 +1671,90 @@ schema.validate(data)
 Also, I have made a form verification using YUP in react.
 
 You can check it out by clicking [here](https://github.com/probablysamir/practiceForm-react).
+
+# Day 19
+
+## Basic ndb usage
+
+- Install ndb using the following command in the terminal:
+```
+npm install -g ndb
+```
+- Next, navigate to the directory where your Node.js application is located.
+
+- To start the ndb debugger with the GUI interface, run the following command for the file you want to debug; in this case server.js
+```
+ndb server.js
+```
+
+- Once your application is running, you can use the GUI interface to set breakpoints, step through your code, and inspect variables.
+
+  - To set a breakpoint, simply click on the line number in your source code where you want the breakpoint to be placed.
+
+  - To start debugging your application, click the "play" button in the GUI interface.
+
+  - When your application reaches a breakpoint, the GUI interface will pause execution and allow you to step through your code, inspect variables, and evaluate expressions.
+
+  - To step through your code, use the "step over", "step into", and "step out" buttons in the GUI interface.
+
+  - To inspect variables, click on the "Scope" tab in the GUI interface and select the scope where the variable is defined. You can then view the values of variables in that scope and evaluate expressions.
+
+- When you have finished debugging your application, you can exit ndb by closing the GUI interface or using the "exit" button.
+
+To help you navigate through the ndb when you first see it, I have included a screenshot of ndb GUI with some basic functions:
+
+![ndb](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture17.jpg)
+
+## Error Handling
+
+When operational errors occur in our code, it is very important that we give meaningful error statement to the user. In order to do that I'll be adding error handlers in my code and refactor the code.
+
+## Creating the global error handler
+
+To handle all the errors we create a global error handler that handles all the errors so we don't have to go through the hectic process of rewriting the error handlers everywhere.
+
+```
+module.exports = (err, req, res, next) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+  res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message,
+  });
+};
+```
+
+## Sending various errors
+
+Let us assume we got a 404 error, let us handle it.
+```
+const globalErrorHandler = require('./controllers/errorController');
+
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+app.use(globalErrorHandler);
+```
+
+Note that we use `app.all` below all the routes so that no any routes above it is matched it sends the statusCode (404) and errorMessage along with the mismatched url to the error handler which then sends back the error response to the user.
+
+Here's an another example where we handle an error where the user tries to get the data.
+```
+const catchAsync = (fn) => {
+  return (req, res, next) => {
+    fn(req, res, next).catch(next);
+  };
+};
+
+exports.getTour = catchAsync(async (req, res, next) => {
+  const tour = await Tour.findById(req.params.id);
+  res.status(200).json({
+    status: 'success',
+    data: { tour },
+  });
+});
+```
+We can also store the catchAsync function in the util folder but for the sake of simplicity I have written this in the same tourController file.
+
+The catchAsync function in reusable and we can use it for creating, deleting and updating the resources too. Making catchAsync lets us to remove the catch block in the code, thus making the code shorter and makes it easy to handle the error.
