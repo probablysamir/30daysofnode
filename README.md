@@ -32,6 +32,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 17](#Day-17)
 - [Day 18](#Day-18)
 - [Day 19](#Day-19)
+- [Day 20](#Day-20)
 
 # Day 1
 
