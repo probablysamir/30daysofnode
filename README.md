@@ -1874,7 +1874,7 @@ This is what I got:
 
 _(Scope->Global->process->env->NODE_ENV)_
 
-You can see the bug right? Even if you cannot, let me tell you that the extra space after the production was ruining everything. Yes, it was not much of a big bug but I invested a lot of time fixing this by modifying code here and there. If I had used ndb for looking at this value earlier it would have been easier to fix. 
+You can see the bug right? Even if you cannot, let me tell you that the extra space after the production was ruining everything. Yes, it was not much of a big bug but I invested a lot of time trying to fix this by modifying code here and there. If I had used ndb for looking at this value earlier it would have been easier to fix. 
 
 __Source of the bug:__ 
 ```
