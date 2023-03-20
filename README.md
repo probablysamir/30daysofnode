@@ -1726,6 +1726,25 @@ module.exports = (err, req, res, next) => {
 
 ## Sending various errors
 
+We can create an AppError class that inherits the properties of the class Error.
+
+To do that:
+```
+class AppError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+
+    this.statusCode = statusCode;
+    this.status = `${statusCode}`.startsWith(4) ? 'fail' : 'error';
+    this.isOperational = true;
+
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+module.exports = AppError;
+```
+
 Let us assume we got a 404 error, let us handle it.
 ```
 const globalErrorHandler = require('./controllers/errorController');
@@ -1758,3 +1777,114 @@ exports.getTour = catchAsync(async (req, res, next) => {
 We can also store the catchAsync function in the util folder but for the sake of simplicity I have written this in the same tourController file.
 
 The catchAsync function in reusable and we can use it for creating, deleting and updating the resources too. Making catchAsync lets us to remove the catch block in the code, thus making the code shorter and makes it easy to handle the error.
+
+# Day 20
+
+## Error Handling (cont...)
+
+### Separating Operational and Programming Errors
+
+You can separate the operational and programming errors by:
+```
+const sendErrorDev = (err, res) => {
+  res.status(err.statusCode).json({
+    status: err.status,
+    error: err,
+    message: err.message,
+    stack: err.stack,
+  });
+};
+
+const sendErrorProd = (err, res) => {
+  //Operational, trusted error: send message to client
+  if (err.isOperational) {
+    res.status(err.statusCode).json({
+      status: err.status,
+      message: err.message,
+    });
+  }
+
+  //Programming or other unkonwn error: don't leak any error details
+  else {
+    // 1) Log error
+    console.error('Error 💥', err);
+
+    // 2) Send generic message
+    res.status(500).json({
+      status: 'error',
+      message: 'Something went wrong!',
+    });
+  }
+};
+
+module.exports = (err, req, res, next) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+  console.log(process.env.NODE_ENV);
+
+  if (process.env.NODE_ENV === 'development') {
+    sendErrorDev(err, res);
+  } else if (process.env.NODE_ENV === 'production') {
+      err = handleValidationErrorDB(err);
+    sendErrorProd(err, res);
+  }
+};
+```
+
+Sometimes, we forget to handle rejected promises (for e.g. forgetting to add a catch statement). To handle these errors, we can add a safety net:
+```
+process.on('unhandledRejection', (err) => {
+  console.log('UNHANDLED REJECTION!! 💥 Shutting down....');
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+```
+To handle synchronous errors (unhandled exceptions):
+```
+process.on('unhandledRejection', (err) => {
+  console.log('UNHANDLED REJECTION!! 💥 Shutting down....');
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+```
+
+## Fixed a bug 
+
+I discussed about ndb earlier but today I'll be sharing my simple experience about how `console.log()` couldn't help me much and ndb was a life savior.
+
+`TLDR (Too Long Didn't Read) at the end`
+
+_(The code is just above this in today's day)_
+
+__Scenario:__ When I was separating operational and programming errors, I was unable to see why my production code was unable to handle the errors.  For e.g. When I sent a get request with mistyped URL postman was giving me the following response:
+
+![bug](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture18.PNG)
+
+I knew that the request-response cycle was stuck somewhere so I looked whether I forgot to send response somewhere but I had sent the response in the code. I then thought about checking the NODE_ENV variable value via `console.log()` to confirm that the production value was set and yes it returned production. I then tried to log something within `sendErrorProd` function and then I found out that the function itself was not called and thus stuck the req-res cycle.
+
+I now started to get frustrated because I know that the simple if-else statement is not working and I can't figure out why. Also, `console.log()` was giving the response in the condition. I then thought about checking the NODE_ENV variable value from ndb.
+
+This is what I got:
+![ndb ss](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture19.PNG)
+
+_(Scope->Global->process->env->NODE_ENV)_
+
+You can see the bug right? Even if you cannot, let me tell you that the extra space after the production was ruining everything. Yes, it was not much of a big bug but I invested a lot of time fixing this by modifying code here and there. If I had used ndb for looking at this value earlier it would have been easier to fix. 
+
+__Source of the bug:__ 
+```
+  "scripts": {
+    "start:prod": "SET NODE_ENV=production & nodemon server.js",
+  },
+```
+__Solution:__
+```
+  "scripts": {
+    "start:prod": "SET NODE_ENV=production&nodemon server.js",
+  },
+```
+__TLDR:__ ndb helped me to find the bug right below my nose and helped me fix it under 5 minutes where normal console logs would have just wasted my time further and shifted my focus somewhere else and mess up even more.
