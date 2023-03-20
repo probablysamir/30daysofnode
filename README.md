@@ -1867,7 +1867,7 @@ __Scenario:__ When I was separating operational and programming errors, I was un
 
 I knew that the request-response cycle was stuck somewhere so I looked whether I forgot to send response somewhere but I had sent the response in the code. I then thought about checking the NODE_ENV variable value via `console.log()` to confirm that the production value was set and yes it returned production. I then tried to log something within `sendErrorProd` function and then I found out that the function itself was not called and thus stuck the req-res cycle.
 
-I now started to get frustrated because I know that the simple if-else statement is not working and I can't figure out why. Also, `console.log()` was giving the response in the condition. I then thought about checking the NODE_ENV variable value from ndb.
+I now started to get frustrated because I know that the simple if-else statement is not working and I can't figure out why. Also, `console.log()` was giving the required condition as output. I then thought about checking the NODE_ENV variable value from ndb.
 
 This is what I got:
 ![ndb ss](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture19.PNG)
