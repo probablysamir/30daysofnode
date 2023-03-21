@@ -33,6 +33,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 18](#Day-18)
 - [Day 19](#Day-19)
 - [Day 20](#Day-20)
+- [Day 21](#Day-21)
 
 # Day 1
 
@@ -1889,3 +1890,106 @@ __Solution:__
   },
 ```
 __TLDR:__ ndb helped me to find the bug right below my nose and helped me fix it under 5 minutes where normal console logs would have just wasted my time further and shifted my focus somewhere else and mess up even more.
+
+# Day 21
+
+I created userSchema to store user information and create a userModel and export it: 
+```
+const mongoose = require('mongoose');
+const validator = require('validator');
+
+//name, email, photo, password, passwordConfirm
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Please tell us your name'],
+  },
+  email: {
+    type: String,
+    required: [true, 'Please provide us your email'],
+    unique: true,
+    lowercase: true,
+    validate: [validator.isEmail, 'Please provide a valid email'],
+  },
+  photo: String,
+  password: {
+    type: String,
+    required: [true, 'Please provide your password'],
+    minLength: 8,
+  },
+  passwordConfirm: {
+    type: String,
+    required: [true, 'Please confirm your password'],
+    validate: {
+      //This only works in CREATE and SAVE
+      validator: function (el) {
+        return el === this.password;
+      },
+      message: 'Passwords are not the same',
+    },
+  },
+});
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
+```
+
+But we cannot store passwords in plain text, so we hash it before storing:
+```
+const bcrypt = require('bcryptjs');
+
+userSchema.pre('save', async function (next) {
+  //Only runs if the password is actually modified
+  if (!this.isModified('password')) return next();
+
+  //Hash the password with cost of 12
+  this.password = await bcrypt.hash(this.password, 12);
+
+  //Delete passwordConfirm field
+  this.passwordConfirm = undefined;
+  next();
+});
+```
+Also, we set the passwordConfirm field to undefined because we don't need it anymore.
+
+I then created an auth controller:
+```
+const User = require('../models/userModel');
+const catchAsync = require('../utils/catchAsync');
+
+exports.signUp = catchAsync(async (req, res, next) => {
+  const newUser = await User.create({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: {
+      user: newUser,
+    },
+  });
+});
+```
+
+## Brief Introduction to JWT Authentication
+
+JWT authentication, also known as JSON Web Token authentication, is a method of authenticating users in web applications by using JSON Web Tokens. A JSON Web Token (JWT) is a compact, URL-safe means of representing claims to be transferred between two parties. The JWT contains user identity information, such as the user ID and role, in a secure, self-contained format.
+
+JWT authentication has the following steps:
+- __User logs in:__ When a user logs into a web application, their credentials (such as username and password) are sent to the server for authentication.
+
+- __Server generates JWT:__ Once the user is authenticated, the server creates a JWT containing the user's identity information, such as their user ID and role.
+
+- __JWT is sent to client:__ The server sends the JWT back to the client (typically in the response body or as a cookie), which stores the JWT locally.
+
+- __JWT is sent with each request:__ For subsequent requests, the client includes the JWT in the request header (usually in the "Authorization" header), allowing the server to verify the user's identity by decoding the JWT.
+
+- __Server verifies JWT:__ When the server receives a request with a JWT, it verifies the JWT's signature and decodes the token to retrieve the user's identity information. If the JWT is valid and not expired, the server can trust that the user is who they claim to be.
+
+- __Server sends response:__ If the user is authorized to perform the requested action, the server sends the appropriate response. Otherwise, the server returns an error indicating that the user is not authorized.
+![JWT](https://lh3.googleusercontent.com/-ICMAzw-dhws/YFsuB1rrJQI/AAAAAAAAIoU/LpWHSM7g9g0QSZRUPGoupmipSt4FrEP_wCLcBGAsYHQ/s16000/jwt%2Bflow.jpg)
