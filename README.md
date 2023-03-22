@@ -34,6 +34,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 19](#Day-19)
 - [Day 20](#Day-20)
 - [Day 21](#Day-21)
+- [Day 22](#Day-22)
 
 # Day 1
 
@@ -1993,3 +1994,125 @@ JWT authentication has the following steps:
 
 - __Server sends response:__ If the user is authorized to perform the requested action, the server sends the appropriate response. Otherwise, the server returns an error indicating that the user is not authorized.
 ![JWT](https://lh3.googleusercontent.com/-ICMAzw-dhws/YFsuB1rrJQI/AAAAAAAAIoU/LpWHSM7g9g0QSZRUPGoupmipSt4FrEP_wCLcBGAsYHQ/s16000/jwt%2Bflow.jpg)
+
+# Day 22
+
+## Implementing JWT authentication
+
+I implemented JWT authentication using the npm package jsonwebtoken. You can install this in your project by:
+```
+npm install jsonwebtoken
+```
+The documentation can be found in github. You can simply click [here](https://github.com/auth0/node-jsonwebtoken#readme)
+
+We then create a function to sign the token.
+```
+const jwt = require('jsonwebtoken');
+
+const signToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+};
+```
+Here, the secret phase is stored in the `config.env` file. The expiresIn is used to expire the token after a certain amount of time. The expiration time is also stored in the `config.env` file.
+
+To create a signUp function:
+```
+exports.signUp = catchAsync(async (req, res, next) => {
+  // Create a new user object to store user information
+  const newUser = await User.create({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
+  });
+
+  // sign the token with the created user id
+  const token = signToken(newUser._id);
+
+  // send back the response
+  res.status(201).json({
+    status: 'success',
+    token,
+    data: {
+      user: newUser,
+    },
+  });
+});
+```
+
+To create a login function:
+```
+exports.logIn = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  // 1) Check if the email and password exists
+  if (!email || !password) {
+    return next(new AppError('Please provide email and password', 400));
+  }
+
+  // 2) Check if user exists and password is correct
+  const user = await User.findOne({ email }).select('+password');
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    return next(new AppError('Incorrect email or password', 401));
+  }
+
+  // 3) If everything is ok, send token to client
+  const token = signToken(user._id);
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+});
+```
+
+We can also create a middleware function to protect various routes. In this case, let us make getting all tours inaccessible before the user logs in.
+
+To do that we can create a protect function:
+```
+exports.protect = catchAsync(async (req, res, next) => {
+  // 1) Getting token and checking if it's there
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token)
+    return next(
+      new AppError('You are not logged in! Please log in to get access', 401)
+    );
+
+  // 2) Verification token
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  // 3) Check if user still exists
+  const freshUser = await User.findById(decoded.id);
+  if (!freshUser)
+    return next(
+      new AppError('The user belonging to this token no longer exists.', 401)
+    );
+
+  // 4) Check if user changed password after the token was issued
+  if (freshUser.changedPasswordAfter(decoded.iat))
+    return next(
+      new AppError('Recently changed password! Please log in again', 401)
+    );
+
+  // GRANTS ACCESS TO THE PROTECTED ROUTE
+  req.user = freshUser;
+  next();
+});
+```
+We can then integrate this function in the routes:
+```
+const authController = require('../controllers/authController');
+
+router
+  .route('/')
+  .get(authController.protect, tourController.getAllTours)
+```
+In this way we can create functions through which user can sign up, login or protect routes. 
