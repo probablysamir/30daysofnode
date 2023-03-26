@@ -2116,3 +2116,83 @@ router
   .get(authController.protect, tourController.getAllTours)
 ```
 In this way we can create functions through which user can sign up, login or protect routes. 
+
+# Day 23
+
+## Advanced Postman Setup
+
+We will now create a advanced postman setup for handling development and production environment. Also, we had to manually add the authorization header with the bearer token so we will be fixing that and automaticallly set the bearer token in postman.
+
+To do that we need to first create an environment in postman. To do that:
+
+Click the environment tab in the left and press the + icon
+
+![Adding Environment](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture20.PNG)
+
+After that you can set the required environment variables
+
+![Adding Environment Variables](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture21.PNG)
+
+You can then replace the URL with the environment variable.
+
+![Replacing Environment Variables](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture22.PNG)
+
+Also, let us set the bearer token automatically when the user logs in or signs up.
+
+To do that, we first navigate to the Login and Signup endpoint and navigate to the tests and write the following code:
+```
+pm.environment.set("jwt", pm.response.json().token);
+```
+
+![Replacing Environment Variables](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture23.PNG)
+
+[_Note: You can find the snippets in the postman itself and can modify the code to your needs_]
+
+Now all that's left is to set the bearer token in the authorization tab. To do that we need to set the Type to 'Bearer Token' and then the token to the environment values. In this case `{{jwt}}`
+
+![Replacing Environment Variables](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture24.PNG)
+
+Now we're ready to go as we have made our experience with jwt tokens much easier with this setup.
+
+# Authorization
+
+Previously we protected a route. We allowed only the valid logged in users to request information about all tours. This is fine but there will be cases where not all logged in users should not have access to some important routes. In this case, all logged in users should not have the permission to delete tours. So, we will be setting up various roles and only give the admins and the lead guides the authorization to delete the tours.
+
+To get started, let us add the role field in the userSchema. We can add this field by simply inserting the following snippet in the userSchema.
+```
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user',
+  }
+```
+This allows the users to be registered either as user, guide, lead-guide or admin. Of course, when a user signs up first he will be given the role of the user and later we can update his/her role manually.
+
+We can create a function in authController which gives access to only the specified roles and denies access to the other and then export it.
+```
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+    next();
+  };
+};
+```
+[_Trivia: 403 error code stands for Forbidden_]
+
+[Note: _restrictTo function is not a middleware but it returns a middleware. We did so because the middleware doesn't have direct access to the roles that we specified_]
+
+To implement this function. We can simply chain it in the tourRoutes.
+```
+router
+  .delete(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
+    tourController.deleteTour
+  );
+```
+
+authController.protect is a middleware that we created when we were implementing authentication. As you can see we chained it because we don't want to rewrite the code to check whether the user is logged in or not while implementing authorization.
