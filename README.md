@@ -36,6 +36,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 21](#Day-21)
 - [Day 22](#Day-22)
 - [Day 23](#Day-23)
+- [Day 24](#Day-24)
 
 # Day 1
 
@@ -2197,3 +2198,174 @@ router
 ```
 
 authController.protect is a middleware that we created when we were implementing authentication. As you can see we chained it because we don't want to rewrite the code to check whether the user is logged in or not while implementing authorization.
+
+# Day 24 
+
+## Implementing Forgot Password Functionality
+
+Sometimes the users forget their password and it is very necessary that the users should have an option of recovering it. To do that we implement our forgot password functionality in our project. There are two major steps I want to break down:
+
+### Creating the reset token
+
+We have to create a reset token so that we know which email the token belongs to and verify the token. Also, we want to randomly generate the token and store it in an encrypted form in the database. To do that we create a method in the userSchema:
+```
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha-256')
+    .update(resetToken)
+    .digest('hex');
+
+  console.log({ resetToken }, this.passwordResetToken);
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
+};
+```
+
+### Sending the token via nodemailer
+
+We created the token but we need to send it to the email the user has regisetered in. So to do that we have awaited a sendEmail function to send email to the email of the users who have forgot their password. To create the sendEmail function we use the nodemailer library. We first create a transporter. i.e. something ready to transport our email. In this case we used mailtrap as a transporter service. You can create your mailtrap account and then get the host, port, username and password and store it in the config file. You can then configure the mail options to speocify the fields when sending the email and then finally await the `transporter.sendMail()` function.
+
+[Note: _Although you'll be given some port options to choose from. I personally was landing on some errors and I used the port 2525 to get rid of that error. You can do the same if you encounter an error like mine._]
+```
+const nodemailer = require('nodemailer');
+
+const sendEmail = async (options) => {
+  // 1) Create a transporter
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    auth: {
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+
+  console.log('hello');
+
+  // 2) Define the email options
+  const mailOptions = {
+    from: 'Peter Lee <hellopeter@example.com>',
+    to: options.email,
+    subject: options.subject,
+    text: options.message,
+    //html:
+  };
+
+  // 3) Actually send the email
+  await transporter.sendMail(mailOptions);
+};
+```
+
+### The final code
+
+Since we create the two major functions let's integrate it all together:
+```
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // 1) GET users based on POSTed email
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new AppError('There is no user with that email address', 404));
+  }
+
+  // 2) Generate random reset token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  // 3) Send it to user's email
+  const resetURL = `${req.protocol}://${req.get(
+    'host'
+  )}/api/v1/users/resetpassword/${resetToken}`;
+
+  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: 'Your password reset token (valid for 10 min)',
+      message,
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return next(
+      new AppError(
+        'There was an error sending the email. Please try again later',
+        500
+      )
+    );
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Token sent to email!',
+  });
+});
+```
+
+## Resetting the password
+
+We successfully sent the reset token to the user but is this it? Nope. We are still missing something. Now we need to actually verify the token and reset the password:
+
+```
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1) Get user based on token
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  // 2) If token has not expired, and there is user, set the new password
+  if (!user) {
+    return next(new AppError('Token is invalid or expired'));
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  // 3) Update changedPasswordAt property for the user
+
+  // 4) Log the user in, send JWT
+  createSendToken(user, 200, res);
+});
+```
+
+This is pretty straight-forward. Let me explain. The user got the token right? But there was nothing about the email address or name of the user and the token was completely random and how are we gonna find out whom the token belongs to. To do that, we first get the token from the user in the URL params. We then encrypt the token using the same algorithm and as we did not use any salt, we will be getting the same result. We now search if the encrypted form of the token that the user sent exists in the database and has it already expired or not.
+
+After verifying that the token is valid, we now select the user from the database. We then set the new password that the user provided and save it in the database and thus we finally  have reset the password of the user.
+
+But wait, what does that 3rd step mean and why is it left blank? Did I forget to complete the code. No, we actually implemented it in the document middleware:
+```
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+```
+
+We then issue the new jwt token to the user and send them.
+
+I actually refactored the code, so the createSendToken function actually looks like:
+```
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+  });
+};
+```
