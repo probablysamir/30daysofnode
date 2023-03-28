@@ -2369,3 +2369,161 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 ```
+# Day 25
+
+## Update user password
+
+We created password reset function but that is if the user forgets the password and it is a bit lengthy. So, we should allow the user to change his/her password if s/he wants to. To do that we will create a function in authController and export it:
+```
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1) Get user from the collection
+  const user = await User.findById(req.user.id).select('+password');
+
+  // 2) Check if the POSTed current password is correct
+  if (!user.correctPassword(req.body.passwordCurrent, user.password)) {
+    return next(new AppError('Your current password is wrong!'));
+  }
+
+  // 3) If so, update password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+  // User.findByIdAndUpdate will NOT work as intended
+
+  // 4) Log user in, send JWT
+  createSendToken(user, 200, res);
+});
+```
+
+[Note: _I have written about the correctPassword() method and createSendFunction() in the earlier days documentation so I will not be repeating them_]
+
+We can setup the route as:
+```
+router.patch(
+  '/updatemypassword',
+  authController.protect,
+  authController.updatePassword
+);
+```
+in the userRoutes.
+
+## Update User information function
+
+If the user is logged in, we should allow the user to update his/her information such as name, email address, etc which is not that sensitive. To do that let us create a function in userController and export it:
+```
+exports.updateMe = catchAsync(async (req, res, next) => {
+  // 1) Create error if user POSTs password data
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(
+      new AppError(
+        'This route is not for password updates. Please use /updatemypassword',
+        400
+      )
+    );
+  }
+
+  // 2) Filtered out unwanted field names that are not allowed to be updated
+  const filteredBody = filterObj(req.body, 'name', 'email');
+
+  // 3) Update user document
+  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true,
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: updatedUser,
+    },
+  });
+});
+```
+This function basically allows the user to update his name and email address but not password. Also, the user can freely update the information without worrying to re-verify again.
+
+We can setup the route as:
+```
+router.patch('/updateme', authController.protect, userController.updateMe);
+
+```
+in the userRoutes.
+
+## Delete Account function
+
+We will want a user to delete his/her account if s/he wishes to. So, we will create a delete account function for the user. Now, we don't want the user to completely delete the account. We just need to make it inactive so that if the user changes his/her mind somewhere in the future we can reactivate his/her account again.
+
+Let us now create the function in the userController and export it:
+```
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+```
+
+But, how will we make sure that this user will never appear in any query? We will create a query middleware to achieve that:
+```
+userSchema.pre(/^find/, function (next) {
+  //this points to current query
+  this.find({ active: { $ne: false } });
+  next();
+});
+```
+
+And that's it. We created the delete account function. We can set the route as:
+```
+router.delete('/deleteme', authController.protect, userController.deleteMe);
+```
+in userRoutes. 
+
+Note that we will still ask for a delete request but will just set it to inactive.
+
+## Security Best Practices And Suggestions
+
+Some of the security problems that may arise and some of the ways to handle them are listed below:
+
+### Compromised Database
+
+- Strongly encrypt passwords with salt and hash (e.g. use bcrypt)
+- Strongly encrypt password reset tokens (e.g. use crypto module and SHA-256)
+
+### Brute Force Attacks
+
+- Use bcrypt ( to make login requests slow )
+- Implement rate limiting (express-rate-limit)
+- Implement maximum login attempts
+
+### Cross-Site Scripting (XSS) Attacks
+
+- Store JWT in HTTPOnly Cookies
+- Sanitize user input data
+- Set special HTTP headers (helmet package)
+
+### Denial-Of-Service (DOS) Attack
+
+- Implement rate limiting (express-rate-limit)
+- Limit body payload (in-body-parser)
+- Avoid evil regular expressions
+
+### NoSQL Query Injection
+
+- Use mongoose for MongoDB (because of SchemaTypes)
+- Sanitize user input data
+
+### Other Best Practices and Suggestions
+
+- Always use HTTPS
+- Create random password reset tokens with expiry dates
+- Deny access to JWT after password change
+- Don't commit sensitive data to Git
+- Don't send error details to clients
+- Prevent Cross-Site Request Forgery (csurf package)
+- Require re-authentication before a high-value action
+- Implement a blacklist of untrusted JWT
+- Confirm user email address after first creating account
+- Keep user logged in with refresh tokens
+- Implement two-factor authentication
+- Prevent parameter pollution causing Uncaught Exceptions
