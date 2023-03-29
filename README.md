@@ -38,6 +38,7 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 23](#Day-23)
 - [Day 24](#Day-24)
 - [Day 25](#Day-25)
+- [Day 26](#Day-26)
 
 # Day 1
 
@@ -2528,3 +2529,184 @@ Some of the security problems that may arise and some of the ways to handle them
 - Keep user logged in with refresh tokens
 - Implement two-factor authentication
 - Prevent parameter pollution causing Uncaught Exceptions
+
+# Day 26
+
+## Cookies
+
+Cookies are small text files that a website stores on a user's computer or mobile device when the user visits the website. Cookies can be used for various purposes, such as tracking user preferences, remembering login information, and personalizing content.
+
+Cookies can be used to secure JWT tokens or sensitive data in a few ways:
+- __HttpOnly flag:__ By setting the HttpOnly flag on the cookie, it ensures that the cookie is not accessible via client-side scripts, making it more difficult for attackers to steal the JWT token.
+
+- __Secure flag:__ By setting the Secure flag on the cookie, it ensures that the cookie is only transmitted over a secure (HTTPS) connection, making it more difficult for attackers to intercept the JWT token.
+
+- __SameSite flag:__ By setting the SameSite flag on the cookie, it ensures that the cookie is only sent in a first-party context, making it more difficult for attackers to steal the JWT token via cross-site request forgery (CSRF) attacks.
+
+Let us send JWTs in cookies when signing JWTs. To do that:
+```
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    secure: true,
+    httpOnly: true,
+  };
+
+  res.cookie('jwt', token);
+
+  user.password = undefined;
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+  });
+};
+```
+
+This is how you send a simple cookie containing JWT token.
+
+## Implementing rate limiter
+
+As we discussed earlier, we can use rate limiter to prevent Brute Force Attacks and DOS (Denial Of Service) attacks. We can use 'express-rate-limit' package to limit the number of requests an ip can make in a certain period of time. To implement this first install the package:
+```
+npm install express-rate-limit
+```
+Now, we can write:
+```
+const rateLimit = require('express-rate-limit');
+
+const limiter = rateLimit({
+  max: 100,   //Maximum number of requests
+  windowsMS: 60 * 60 * 1000,   //Time
+  message: 'Too many requests from this IP, please try again in an hour!',
+});
+
+app.use('/api', limiter);
+```
+
+After that the package will setup a header in the response to inform how many requests are left and sends the error messages if the limit is reached. You can configure the maximum number of requests according to the needs. You can check the headers through postman.
+
+![headers](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture25.PNG)
+
+## Helmet package
+
+The Helmet package is a popular middleware package used in Node.js for adding extra security to web applications. It does so by setting various HTTP headers that help protect against common web vulnerabilities.
+
+Some of the features it provides are:
+
+- __Cross-site scripting (XSS) protection:__ The package sets the X-XSS-Protection header, which helps to prevent cross-site scripting attacks.
+
+- __Content Security Policy (CSP):__ The package allows you to configure and set the Content-Security-Policy header, which helps to mitigate against various types of attacks such as cross-site scripting, clickjacking, and code injection.
+
+- __Strict Transport Security (HSTS):__ The package sets the Strict-Transport-Security header, which ensures that the web application is only accessible over HTTPS.
+
+- __X-Frame-Options:__ The package sets the X-Frame-Options header, which helps to prevent clickjacking attacks.
+
+- __X-Content-Type-Options:__ The package sets the X-Content-Type-Options header, which prevents browsers from interpreting files as a different MIME type.
+
+Overall, the Helmet package is a useful tool for increasing the security of Node.js web applications by providing an easy way to set various security headers.
+
+You can simply install it using:
+```
+npm install helmet
+```
+
+And here's how we can implement it in our project:
+```
+const helmet = require('helmet');
+
+//Set security HTTP headers
+app.use('/api', helmet());
+```
+We write this in our app.js file where we have our other middlewares.
+
+Here is a screenshot of how the headers set by helmet looks like:
+
+![headers](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture26.PNG)
+
+You should definitely checkout the documentation of helmet. You can google it or just click [here](https://helmetjs.github.io/).
+
+## NoSQL injection and it's prevention with data sanitization
+
+NoSQL injection is a type of security vulnerability that can occur in web applications that use NoSQL databases. It involves an attacker exploiting vulnerabilities in NoSQL queries to gain unauthorized access to data. Attackers can achieve this by injecting malicious input into a web application's parameters that interact with the NoSQL database, thereby manipulating the query's logic and gaining access to sensitive information.
+
+Here's a simple example to demonstrate that to you. In the user authentication that I have created earlier, let us send some malicious code:
+
+![headers](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture27.PNG)
+
+Here, I gave a password (attacker might give a commonly used password) and I got access to the account having that password without knowing the email. Seems scary now? But don't worry. Eventhough the issue is huge, the solution is simple and short.
+
+All we need to do is install `express-mongo-sanitize` package:
+```
+npm install express-mongo-sanitize
+```
+
+And then:
+```
+const mongoSanitize = require('express-mongo-sanitize');
+
+//Data sanitization against NoSQL query injections
+app.use(mongoSanitize());
+```
+
+## Prevention of Cross-Site Scripting(XSS) attacks using data sanitization
+
+Cross-Site Scripting (XSS) attacks are a type of web security vulnerability that enables attackers to inject malicious scripts into web pages viewed by other users. The vulnerability is caused by an application that does not properly sanitize or validate user input, which can be used to inject scripts that are executed in the victim's web browser.
+
+Generally, mongoose's schema validation can prevent xss on the server side. But to further ensure, we can use `xss-clean` module helps to sanitize the input.
+
+To install it:
+```
+npm install xss-clean
+```
+
+To use it:
+```
+const xss = require('xss-clean');
+
+//Data sanitization aganist XSS
+app.use(xss());
+```
+
+## Parameter Pollution and it's prevention
+
+Parameter Pollution is a type of web vulnerability that occurs when a web application receives multiple values for a single parameter. It is caused by a lack of input validation or filtering, which allows attackers to inject extra parameters or overwrite the intended parameter value. This can result in unexpected or unintended behavior in the web application, and can lead to security vulnerabilities.
+
+Here's an example of how parameter pollution can occur:
+
+Suppose a web application allows users to submit a form to update their profile information, including their email address. The application uses the submitted email address to send account verification emails.
+
+An attacker could exploit this by submitting multiple values for the email parameter, such as email=attacker@example.com&email=victim@example.com. If the application does not properly handle or validate the email parameter, it may use the last value provided, in this case victim@example.com, to send the account verification email, effectively overriding the intended email address of the user.
+
+This could allow the attacker to gain unauthorized access to the victim's account, by intercepting the account verification email and completing the account registration process themselves.
+
+To prevent this we can use another package named `hpp` to sanitize the input.
+
+To install it:
+```
+npm install hpp
+```
+
+To use it:
+```
+const hpp = require('hpp');
+
+//Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'price',
+      'maxGroupSize',
+      'difficulty',
+    ],
+  })
+);
+```
+
+We can whitelist some parameters so that the user can perform intended combined queries.
