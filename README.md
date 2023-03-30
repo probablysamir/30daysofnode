@@ -2710,3 +2710,57 @@ app.use(
 ```
 
 We can whitelist some parameters so that the user can perform intended combined queries.
+
+# Day 27
+
+## Data Modelling
+
+Data modeling is the process of defining the structure, relationships, and constraints of data in a database or other data storage system. It is a critical step in the database development process, as it helps ensure that the database can efficiently store and retrieve data, while also enforcing rules that maintain data integrity.
+
+Data modeling involves creating a conceptual model of the data, which defines the types of data that will be stored, the relationships between them, and any business rules or constraints that must be enforced. This conceptual model is then used to create a logical model, which maps the conceptual model to the data storage system, such as a relational database or document database. The logical model defines the tables, columns, and relationships that will be used to store the data, and includes details such as data types, primary and foreign keys, and indexes.
+
+Once the logical model is created, it can be used to generate the physical model, which defines the physical implementation of the database, including details such as the file format, storage locations, and access methods.
+
+Data modeling is an iterative process that involves refining and testing the model to ensure that it accurately represents the data and meets the requirements of the application. By creating a well-designed data model, developers can improve the performance, scalability, and maintainability of the database, and reduce the likelihood of errors or data inconsistencies.
+
+![Modelling](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture28.PNG)
+
+## Types of relationships between data
+
+In data modeling, there are three main types of relationships between data:
+
+- __One-to-One (1:1) Relationship:__ In this type of relationship, one entity is related to only one instance of another entity. For example, in a database of employees, each employee may have only one email address.
+
+- __One-to-Many (1:N) Relationship:__ In this type of relationship, one entity is related to multiple instances of another entity. For example, in a database of customers and orders, one customer may have many orders.
+
+- __Many-to-Many (N:M) Relationship:__ In this type of relationship, multiple instances of one entity are related to multiple instances of another entity. For example, in a database of students and courses, each student may take multiple courses and each course may have multiple students.
+
+## Referencing vs Embedding
+
+In data modeling, there are two main approaches for representing relationships between entities in a database: referencing and embedding.
+
+- __Referencing:__ In this approach, entities are stored separately in their own collections or tables, and references to related entities are stored as foreign keys or object IDs. For example, in a database of blog posts and comments, each comment document or row may contain a reference to the corresponding post document or row through a foreign key or object ID. This approach is often used when the related entities have a one-to-many or many-to-many relationship, as it can reduce data duplication and improve data consistency.
+
+  An advantage of referencing data is that it's easier to query each document on its own.
+
+  But we need more queries to get data from referenced document.
+
+- __Embedding:__ In this approach, related entities are stored within the same document or row as the parent entity. For example, in a database of blog posts and comments, each post document or row may contain an array of embedded comment documents or rows. This approach is often used when the related entities have a one-to-few or one-to-one relationship, as it can simplify data retrieval and reduce the need for joins.
+
+  An advantage of embedding data is that we can get all the information in one query.
+
+  But it's impossible to query the embedded document on its own.
+
+The choice between referencing and embedding depends on various factors, such as the nature of the relationship between entities, the size of the documents or rows, and the querying patterns of the application. Referencing is often preferred for larger documents or rows and for entities with many related entities, while embedding is often preferred for smaller documents or rows and for entities with few related entities.
+
+## Types of referencing
+
+In data modeling, there are three main types of referencing:
+
+- __Child Referencing:__ In this type of referencing, a document or row in one collection or table contains a reference to a document or row in another collection or table that it is associated with. The referenced document or row is considered the "parent" and the referencing document or row is considered the "child". For example, in a database of blog posts and comments, each comment document or row may contain a reference to the corresponding post document or row.
+
+- __Parent Referencing:__ In this type of referencing, a document or row in one collection or table is referenced by one or more documents or rows in another collection or table. The referenced document or row is considered the "parent" and the referencing document or row is considered the "child". For example, in a database of products and orders, each order document or row may contain a reference to the corresponding product document or row.
+
+- __Two-Way Referencing:__ In this type of referencing, two documents or rows in different collections or tables contain references to each other. This can be used to represent a bidirectional relationship between entities. For example, in a database of users and friends, each user document or row may contain a reference to their friends, and each friend document or row may contain a reference back to the user.
+
+The choice between child referencing, parent referencing, and two-way referencing depends on the nature of the relationship between entities and the querying patterns of the application. Child referencing is often used for one-to-many relationships, parent referencing is often used for many-to-one relationships, and two-way referencing is often used for many-to-many relationships.
