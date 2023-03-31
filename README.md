@@ -39,6 +39,8 @@ You can manually scroll to check my progress or click these links directly to na
 - [Day 24](#Day-24)
 - [Day 25](#Day-25)
 - [Day 26](#Day-26)
+- [Day 27](#Day-27)
+- [Day-28](#Day-28)
 
 # Day 1
 
@@ -2764,3 +2766,25 @@ In data modeling, there are three main types of referencing:
 - __Two-Way Referencing:__ In this type of referencing, two documents or rows in different collections or tables contain references to each other. This can be used to represent a bidirectional relationship between entities. For example, in a database of users and friends, each user document or row may contain a reference to their friends, and each friend document or row may contain a reference back to the user.
 
 The choice between child referencing, parent referencing, and two-way referencing depends on the nature of the relationship between entities and the querying patterns of the application. Child referencing is often used for one-to-many relationships, parent referencing is often used for many-to-one relationships, and two-way referencing is often used for many-to-many relationships.
+
+# Day 28
+
+Today I modelled the data for the project I'm working on:
+
+![modeling](https://raw.githubusercontent.com/probablysamir/30daysofnode/main/File_dumps/Capture29.PNG)
+
+Here's how I defined the relationships and modelled the data:
+
+- __Tours-reviews__: Since a tour is going to have many reviews but the reviews can only belong to one tour at a time. So they have a 1:MANY relationship. Also, it is feasible to individually store the reviews so that we can update it separately without having to query the tours. We will have a parent referencing.
+
+- __Tours-Locations:__ Since some tours can have same location and some locaitons can belong to a number of tours, we can say that they will have a FEW:FEW relationship. Since, locations are always needed whenever we talk about a tour, we can embed the locations in the tours
+
+- __Users-Reviews:__ Since a user can write multiple reviews they have a 1:MANY relationship. Also, as it is more feasible to store the reviews separately, we will have parent referencing.
+
+- __Tours-Users:__ Since a tour guide can be the guide for several tours and a tour might have several guides so they will have a FEW:FEW relationship. Also, we can do child referencing or embed the data in this case.
+
+- __Tours-Bookings:__ Since a tour can have several bookings so they have a 1:MANY relationship. So, we can use parent referencing.
+
+- __Users-Bookings:__ Since a user can have several bookings so it is a 1:MANY relationship. So, we can use parent relationship.
+
+Also, you can have a closer look at the figure to see which is the parent and which is a child during parent referencing.
