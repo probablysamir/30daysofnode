@@ -2789,3 +2789,67 @@ Here's how I defined the relationships and modelled the data:
 - __Users-Bookings:__ Since a user can have several bookings so it is a 1:MANY relationship. So, we can use parent relationship.
 
 Also, you can have a closer look at the figure to see which is the parent and which is a child during parent referencing.
+
+# Day 29
+
+## Embedding the document
+
+You can embed documents directly by defining it in the schema. Let us add a field called locations in the schema:
+
+```
+locations: [
+    {
+    type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+    },
+    coordinates: [Number],
+    address: String,
+    description: String,
+    day: Number,
+    },
+],
+```
+This will now contain an array of documents as defined.
+
+## Referencing the document:
+
+We can reference the document by defining a field which contains an array of document with type `mongoose.Schema.Types.ObjectID` and a `ref`:
+
+```
+guides: [
+    {
+    type: mongoose.Schema.Types.ObjectID,
+    ref: 'User',
+    },
+],
+```
+
+Now we have to add user's `_id` to the guides array for referencing. We can achieve this via updating the document or creating a new document with id of guides stored in the array.
+
+But when we query this we will get normal id and no data of the actual guide. To achieve that, we need to popoulate the query. This can be either achieved by chaining the populate funciton in the query in the controller like:
+```
+exports.getTour = catchAsync(async (req, res, next) => {
+  const tour = await Tour.findById(req.params.id).populate({
+    path: 'guides',
+    select: '_id name email role',
+  });
+  
+  // Code below this ahould be as it is as before........
+
+});
+```
+`path:` is used to know where is the _id that is to be referenced and populated and `select:` is used to just query certain fields.
+
+__OR__ we can use this directly in the query middleware like:
+
+```
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '_id name email role',
+  });
+  next();
+});
+```
