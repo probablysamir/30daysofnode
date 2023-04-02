@@ -1,6 +1,5 @@
 # 30 Days of N(c)ode
 
-
 I will be learning and coding NodeJS for 30 days and I will be updating daily about my progress and understanding.
 
 # Resources
@@ -2854,4 +2853,104 @@ tourSchema.pre(/^find/, function (next) {
   });
   next();
 });
+```
+
+# Day 30
+
+I looked at my progress and revised the older topics and created a review schema to store reviews and reference the tour and users:
+```
+// review / rating/ createdAt / ref to tour / ref to user
+const mongoose = require('mongoose');
+
+const reviewSchema = new mongoose.Schema(
+  {
+    review: {
+      type: String,
+      required: [true, 'Review cannot be empty'],
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+    },
+    tour: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tour',
+      required: [true, 'Review must belong to a tour'],
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Review must be belong to a user'],
+    },
+  },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
+
+reviewSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'tour',
+    select: 'name',
+  }).populate({
+    path: 'user',
+    select: 'name photo',
+  });
+
+  next();
+});
+
+const Review = mongoose.model('Review', reviewSchema);
+
+module.exports = Review;
+```
+
+I also created the review controller:
+```
+const Review = require('../models/reviewModel');
+const catchAsync = require('../utils/catchAsync');
+
+exports.getAllReviews = catchAsync(async (req, res, next) => {
+  const reviews = await Review.find();
+
+  res.status(200).json({
+    status: 'success',
+    results: reviews.length,
+    data: {
+      reviews,
+    },
+  });
+});
+
+exports.createReview = catchAsync(async (req, res, next) => {
+  const newReview = await Review.create(req.body);
+  res.status(201).json({
+    status: 'success',
+    data: {
+      newReview,
+    },
+  });
+});
+```
+
+And also created the reviewRoutes:
+```
+const express = require('express');
+const reviewController = require('../controllers/reviewController');
+const authController = require('../controllers/authController');
+
+const router = express.Router();
+
+router
+  .route('/')
+  .get(reviewController.getAllReviews)
+  .post(authController.protect, reviewController.createReview);
+
+module.exports = router;
 ```
